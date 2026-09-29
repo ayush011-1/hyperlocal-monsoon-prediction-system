@@ -1,0 +1,59 @@
+[
+  {
+    "id": "obs-3ca06e",
+    "district": "nashik",
+    "block": "sinnar",
+    "panchayat": "musalgaon",
+    "date": "2026-09-29",
+    "observed_rainfall_mm": 15.0,
+    "rainfall_condition": "Moderate continuous showers",
+    "crop_condition": "Pre-sowing tillage & field prep underway",
+    "remarks": "Field verification conducted against local rain gauge.",
+    "officer_name": "Dr. A. B. Joshi (Taluka Agriculture Officer)",
+    "status": "Submitted & Logged",
+    "has_photo": true,
+    "submitted_at": "2026-09-29T13:23:33.864720"
+  },
+  {
+    "id": "obs-101",
+    "district": "Pune",
+    "block": "Haveli",
+    "panchayat": "Wagholi",
+    "date": "2026-06-12",
+    "observed_rainfall_mm": 18.5,
+    "rainfall_condition": "Moderate continuous showers",
+    "crop_condition": "Pre-sowing field preparation active",
+    "remarks": "Soil moisture reached 65% field capacity. Early onset signs verified by local rain gauge.",
+    "officer_name": "Dr. R. K. Patil (Taluka Agri Officer)",
+    "status": "Verified",
+    "has_photo": true
+  },
+  {
+    "id": "obs-102",
+    "district": "Pune",
+    "block": "Baramati",
+    "panchayat": "Malegaon Budruk",
+    "date": "2026-06-11",
+    "observed_rainfall_mm": 4.2,
+    "rainfall_condition": "Scattered drizzle, overcast sky",
+    "crop_condition": "Sugarcane established, Soybean sowing on hold",
+    "remarks": "Rainfall deficit by 12mm compared to normal onset week. Farmers advised to hold sowing until next surge.",
+    "officer_name": "S. M. Shinde (Agri Assistant)",
+    "status": "Verified",
+    "has_photo": true
+  },
+  {
+    "id": "obs-103",
+    "district": "Nashik",
+    "block": "Niphad",
+    "panchayat": "Lasalgaon",
+    "date": "2026-06-10",
+    "observed_rainfall_mm": 32.0,
+    "rainfall_condition": "Heavy convective rain with wind",
+    "crop_condition": "Onion nursery beds protected; drainage channels cleared",
+    "remarks": "Heavy cloudburst in afternoon. Onset criteria met with 2-day cumulative 55mm.",
+    "officer_name": "V. B. Deshmukh (Circle Officer)",
+    "status": "Pending Review",
+    "has_photo": false
+  }
+]

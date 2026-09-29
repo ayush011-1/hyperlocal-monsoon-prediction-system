@@ -1,0 +1,85 @@
+{
+  "monsoon_onset": {
+    "model_type": "XGBoost Classifier (Isotonic Calibrated)",
+    "roc_auc": 0.999,
+    "brier_score": 0.0064,
+    "f1_score": 0.9553,
+    "top_features": [
+      [
+        "doy_sin",
+        0.46
+      ],
+      [
+        "relative_humidity_700hpa",
+        0.1438
+      ],
+      [
+        "zonal_wind_850hpa_ms",
+        0.13
+      ],
+      [
+        "antecedent_soil_moisture_pct",
+        0.1217
+      ],
+      [
+        "doy_cos",
+        0.0293
+      ]
+    ]
+  },
+  "break_risk": {
+    "model_type": "Random Forest Classifier (Balanced Class Weights)",
+    "roc_auc": 0.9999,
+    "brier_score": 0.0085,
+    "f1_score": 0.9903,
+    "top_features": [
+      [
+        "enso_nino34",
+        0.4523
+      ],
+      [
+        "doy_sin",
+        0.1183
+      ],
+      [
+        "zonal_wind_850hpa_ms",
+        0.1149
+      ],
+      [
+        "antecedent_soil_moisture_pct",
+        0.08
+      ],
+      [
+        "iod_dmi",
+        0.0732
+      ]
+    ]
+  },
+  "heavy_rain": {
+    "model_type": "XGBoost Convective Precipitation Classifier",
+    "roc_auc": 0.8697,
+    "brier_score": 0.0033,
+    "top_features": [
+      [
+        "antecedent_soil_moisture_pct",
+        0.3315
+      ],
+      [
+        "doy_sin",
+        0.1042
+      ],
+      [
+        "doy_cos",
+        0.0912
+      ],
+      [
+        "elevation_m",
+        0.0794
+      ],
+      [
+        "lng",
+        0.0723
+      ]
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "features": [
+    "lat",
+    "lng",
+    "elevation_m",
+    "ghats_dist_km",
+    "doy_sin",
+    "doy_cos",
+    "enso_nino34",
+    "iod_dmi",
+    "mjo_phase",
+    "mjo_amplitude",
+    "temp_max_c",
+    "relative_humidity_700hpa",
+    "zonal_wind_850hpa_ms",
+    "outgoing_longwave_radiation_wm2",
+    "antecedent_soil_moisture_pct"
+  ],
+  "train_years": "1995-2019",
+  "test_years": "2020-2024",
+  "total_records": 188190,
+  "training_samples": 156825,
+  "evaluation_samples": 31365,
+  "last_trained_utc": "2026-09-29 07:30 UTC"
+}

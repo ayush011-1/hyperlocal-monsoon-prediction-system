@@ -1,0 +1,221 @@
+{
+  "state": "Maharashtra",
+  "districts": [
+    {
+      "id": "pune",
+      "name": "Pune",
+      "center": [18.5204, 73.8567],
+      "blocks": [
+        {
+          "id": "haveli",
+          "name": "Haveli",
+          "center": [18.4900, 73.9100],
+          "panchayats": [
+            { "id": "wagholi", "name": "Wagholi", "lat": 18.5800, "lng": 73.9800, "elevation_m": 570 },
+            { "id": "loni_kalbhor", "name": "Loni Kalbhor", "lat": 18.4892, "lng": 74.0191, "elevation_m": 560 },
+            { "id": "uruli_kanchan", "name": "Uruli Kanchan", "lat": 18.4833, "lng": 74.1333, "elevation_m": 555 }
+          ]
+        },
+        {
+          "id": "baramati",
+          "name": "Baramati",
+          "center": [18.1517, 74.5772],
+          "panchayats": [
+            { "id": "malegaon_bk", "name": "Malegaon Budruk", "lat": 18.1400, "lng": 74.5200, "elevation_m": 540 },
+            { "id": "katphal", "name": "Katphal", "lat": 18.1800, "lng": 74.5500, "elevation_m": 542 },
+            { "id": "supe", "name": "Supe", "lat": 18.3200, "lng": 74.4000, "elevation_m": 580 }
+          ]
+        },
+        {
+          "id": "junnar",
+          "name": "Junnar",
+          "center": [19.2067, 73.8767],
+          "panchayats": [
+            { "id": "narayangaon", "name": "Narayangaon", "lat": 19.1170, "lng": 73.9780, "elevation_m": 650 },
+            { "id": "otur", "name": "Otur", "lat": 19.2600, "lng": 73.9100, "elevation_m": 670 },
+            { "id": "alen", "name": "Alephata", "lat": 19.1800, "lng": 74.1000, "elevation_m": 640 }
+          ]
+        },
+        {
+          "id": "shirur",
+          "name": "Shirur",
+          "center": [18.8267, 74.3789],
+          "panchayats": [
+            { "id": "shikrapur", "name": "Shikrapur", "lat": 18.7200, "lng": 74.1300, "elevation_m": 575 },
+            { "id": "sanvi", "name": "Sanaswadi", "lat": 18.6600, "lng": 74.0900, "elevation_m": 565 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nashik",
+      "name": "Nashik",
+      "center": [19.9975, 73.7898],
+      "blocks": [
+        {
+          "id": "dindori",
+          "name": "Dindori",
+          "center": [20.2014, 73.8347],
+          "panchayats": [
+            { "id": "wani", "name": "Wani", "lat": 20.3150, "lng": 73.9050, "elevation_m": 620 },
+            { "id": "varvandi", "name": "Varvandi", "lat": 20.1700, "lng": 73.8400, "elevation_m": 610 }
+          ]
+        },
+        {
+          "id": "niphad",
+          "name": "Niphad",
+          "center": [20.0767, 74.1100],
+          "panchayats": [
+            { "id": "lasalgaon", "name": "Lasalgaon", "lat": 20.1472, "lng": 74.2289, "elevation_m": 560 },
+            { "id": "ozar", "name": "Ozar", "lat": 20.0900, "lng": 73.9200, "elevation_m": 580 }
+          ]
+        },
+        {
+          "id": "sinnar",
+          "name": "Sinnar",
+          "center": [19.8450, 73.9980],
+          "panchayats": [
+            { "id": "musalgaon", "name": "Musalgaon", "lat": 19.8800, "lng": 74.0300, "elevation_m": 660 },
+            { "id": "dapur", "name": "Dapur", "lat": 19.7800, "lng": 74.0500, "elevation_m": 650 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ahilyanagar",
+      "name": "Ahilyanagar (Ahmednagar)",
+      "center": [19.0952, 74.7496],
+      "blocks": [
+        {
+          "id": "sangamner",
+          "name": "Sangamner",
+          "center": [19.5772, 74.2144],
+          "panchayats": [
+            { "id": "ashwi", "name": "Ashwi", "lat": 19.5200, "lng": 74.3100, "elevation_m": 550 },
+            { "id": "sakur", "name": "Sakur", "lat": 19.4500, "lng": 74.1500, "elevation_m": 590 }
+          ]
+        },
+        {
+          "id": "rahata",
+          "name": "Rahata",
+          "center": [19.7042, 74.4939],
+          "panchayats": [
+            { "id": "shirdi_rural", "name": "Shirdi Rural", "lat": 19.7645, "lng": 74.4762, "elevation_m": 510 },
+            { "id": "pimplas", "name": "Pimplas", "lat": 19.6800, "lng": 74.5200, "elevation_m": 505 }
+          ]
+        },
+        {
+          "id": "shrirampur",
+          "name": "Shrirampur",
+          "center": [19.6190, 74.6560],
+          "panchayats": [
+            { "id": "belapur", "name": "Belapur", "lat": 19.5900, "lng": 74.6500, "elevation_m": 495 },
+            { "id": "taklibhan", "name": "Taklibhan", "lat": 19.6700, "lng": 74.7200, "elevation_m": 490 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "satara",
+      "name": "Satara",
+      "center": [17.6805, 73.9934],
+      "blocks": [
+        {
+          "id": "karad",
+          "name": "Karad",
+          "center": [17.2889, 74.1813],
+          "panchayats": [
+            { "id": "masur", "name": "Masur", "lat": 17.3800, "lng": 74.2200, "elevation_m": 580 },
+            { "id": "undaria", "name": "Undale", "lat": 17.2300, "lng": 74.1200, "elevation_m": 600 }
+          ]
+        },
+        {
+          "id": "wai",
+          "name": "Wai",
+          "center": [17.9489, 73.8939],
+          "panchayats": [
+            { "id": "bhuinj", "name": "Bhuinj", "lat": 18.0100, "lng": 73.9800, "elevation_m": 625 },
+            { "id": "menawali", "name": "Menawali", "lat": 17.9600, "lng": 73.8600, "elevation_m": 635 }
+          ]
+        },
+        {
+          "id": "phaltan",
+          "name": "Phaltan",
+          "center": [17.9867, 74.4333],
+          "panchayats": [
+            { "id": "taradgaon", "name": "Taradgaon", "lat": 18.0500, "lng": 74.3200, "elevation_m": 570 },
+            { "id": "nimbhore", "name": "Nimbhore", "lat": 17.9300, "lng": 74.4900, "elevation_m": 560 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kolhapur",
+      "name": "Kolhapur",
+      "center": [16.7050, 74.2433],
+      "blocks": [
+        {
+          "id": "karveer",
+          "name": "Karveer",
+          "center": [16.6900, 74.2300],
+          "panchayats": [
+            { "id": "uchgaon", "name": "Uchgaon", "lat": 16.6800, "lng": 74.2800, "elevation_m": 550 },
+            { "id": "wadange", "name": "Wadange", "lat": 16.7400, "lng": 74.2000, "elevation_m": 560 }
+          ]
+        },
+        {
+          "id": "hatkanangle",
+          "name": "Hatkanangle",
+          "center": [16.7442, 74.4447],
+          "panchayats": [
+            { "id": "ichalkaranji_peri", "name": "Korochi", "lat": 16.7100, "lng": 74.4700, "elevation_m": 540 },
+            { "id": "rukadi", "name": "Rukadi", "lat": 16.7200, "lng": 74.3600, "elevation_m": 545 }
+          ]
+        },
+        {
+          "id": "shirol",
+          "name": "Shirol",
+          "center": [16.7267, 74.5989],
+          "panchayats": [
+            { "id": "jaysingpur_rural", "name": "Jaysingpur Rural", "lat": 16.7600, "lng": 74.5600, "elevation_m": 542 },
+            { "id": "kurundwad", "name": "Kurundwad", "lat": 16.6900, "lng": 74.6100, "elevation_m": 535 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "solapur",
+      "name": "Solapur",
+      "center": [17.6599, 75.9064],
+      "blocks": [
+        {
+          "id": "pandharpur",
+          "name": "Pandharpur",
+          "center": [17.6775, 75.3267],
+          "panchayats": [
+            { "id": "bhalwani", "name": "Bhalwani", "lat": 17.7200, "lng": 75.2800, "elevation_m": 460 },
+            { "id": "kasegaon", "name": "Kasegaon", "lat": 17.6200, "lng": 75.3800, "elevation_m": 455 }
+          ]
+        },
+        {
+          "id": "barshi",
+          "name": "Barshi",
+          "center": [18.2333, 75.6967],
+          "panchayats": [
+            { "id": "vairag", "name": "Vairag", "lat": 18.0600, "lng": 75.8200, "elevation_m": 490 },
+            { "id": "pangri", "name": "Pangri", "lat": 18.1800, "lng": 75.6500, "elevation_m": 505 }
+          ]
+        },
+        {
+          "id": "mohol",
+          "name": "Mohol",
+          "center": [17.8183, 75.6483],
+          "panchayats": [
+            { "id": "kurul", "name": "Kurul", "lat": 17.7800, "lng": 75.5900, "elevation_m": 470 },
+            { "id": "kamati", "name": "Kamati", "lat": 17.8600, "lng": 75.7200, "elevation_m": 480 }
+          ]
+        }
+      ]
+    }
+  ]
+}
