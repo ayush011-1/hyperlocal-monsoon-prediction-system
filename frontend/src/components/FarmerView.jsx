@@ -13,6 +13,7 @@ import {
   Sprout,
   Clock,
   Volume2,
+  VolumeX,
   Mic,
   MicOff,
   ChevronDown,
@@ -24,6 +25,12 @@ import {
   Check
 } from 'lucide-react';
 import { fetchAgentChat } from '../services/api';
+import {
+  speakText,
+  stopSpeaking,
+  isSpeechRecognitionSupported,
+  createSpeechRecognition
+} from '../utils/speech';
 
 export function FarmerView({
   forecastData,
@@ -57,6 +64,27 @@ export function FarmerView({
   const [chatError, setChatError] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [voiceNotice, setVoiceNotice] = useState(null);
+  const [activeSpeakingText, setActiveSpeakingText] = useState(null);
+  const recognitionControllerRef = useRef(null);
+
+  // Pre-load synthesis voices and cleanup on unmount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
+    return () => {
+      stopSpeaking();
+      if (recognitionControllerRef.current) {
+        try {
+          recognitionControllerRef.current.abort();
+        } catch (e) {}
+      }
+    };
+  }, []);
 
   // Conversational history
   const [messages, setMessages] = useState([
@@ -202,44 +230,132 @@ export function FarmerView({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, chatLoading]);
 
-  // 🔊 Web Speech API Speech Synthesis (Audio Output)
-  const speakText = (text) => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (language === 'mr') utterance.lang = 'mr-IN';
-    else if (language === 'hi') utterance.lang = 'hi-IN';
-    else utterance.lang = 'en-IN';
-    utterance.rate = 0.95;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-  };
-
-  // 🎙️ Web Speech API Speech Recognition (Audio Input)
-  const startVoiceInput = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert(language === 'mr' ? 'तुमच्या ब्राऊझरमध्ये व्हॉइस इनपुट सपोर्ट नाही.' : 'Voice input is not supported in this browser.');
+  // 🔊 Audio Output (Speech Synthesis) Handler
+  const handleToggleSpeak = (text) => {
+    if (!text) return;
+    if (isSpeaking && activeSpeakingText === text) {
+      stopSpeaking();
+      setIsSpeaking(false);
+      setActiveSpeakingText(null);
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
-    recognition.interimResults = false;
+    const ok = speakText(text, {
+      language,
+      onStart: () => {
+        setIsSpeaking(true);
+        setActiveSpeakingText(text);
+      },
+      onEnd: () => {
+        setIsSpeaking(false);
+        setActiveSpeakingText(null);
+      },
+      onError: () => {
+        setIsSpeaking(false);
+        setActiveSpeakingText(null);
+      }
+    });
 
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    if (!ok) {
+      setIsSpeaking(false);
+      setActiveSpeakingText(null);
+    }
+  };
 
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setChatInput(transcript);
-      handleSendAgentMessage(transcript);
-    };
+  // 🎙️ Audio Input (Speech Recognition) Handler
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      if (recognitionControllerRef.current) {
+        recognitionControllerRef.current.stop();
+        recognitionControllerRef.current = null;
+      }
+      setIsListening(false);
+      setVoiceNotice(null);
+      return;
+    }
 
-    recognition.start();
+    // Stop speaking so mic doesn't capture speaker audio
+    stopSpeaking();
+    setIsSpeaking(false);
+    setActiveSpeakingText(null);
+
+    if (!isSpeechRecognitionSupported()) {
+      const msg =
+        language === 'mr'
+          ? 'तुमच्या ब्राऊझरमध्ये व्हॉइस इनपुट सपोर्ट नाही. कृपया Google Chrome किंवा Edge वापरा.'
+          : language === 'hi'
+          ? 'आपके ब्राउज़र में वॉइस इनपुट सपोर्ट नहीं है। कृपया Google Chrome या Edge का उपयोग करें।'
+          : 'Voice input is not supported in this browser. Please use Google Chrome or Microsoft Edge.';
+      setVoiceNotice(msg);
+      setTimeout(() => setVoiceNotice(null), 6000);
+      return;
+    }
+
+    const controller = createSpeechRecognition({
+      language,
+      onStart: () => {
+        setIsListening(true);
+        setVoiceNotice(
+          language === 'mr'
+            ? '🎙️ मायक्रोफोन चालू आहे... स्पष्ट आवाजात बोला!'
+            : language === 'hi'
+            ? '🎙️ माइक्रोफ़ोन चालू है... स्पष्ट बोलें!'
+            : '🎙️ Listening... Speak your question now!'
+        );
+      },
+      onInterimResult: (interim) => {
+        setChatInput(interim);
+      },
+      onFinalResult: (final) => {
+        setIsListening(false);
+        setVoiceNotice(null);
+        setChatInput(final);
+        recognitionControllerRef.current = null;
+        handleSendAgentMessage(final);
+      },
+      onError: (event) => {
+        setIsListening(false);
+        recognitionControllerRef.current = null;
+        const errType = event.error || event;
+        if (errType === 'not-allowed' || errType === 'service-not-allowed') {
+          setVoiceNotice(
+            language === 'mr'
+              ? '⚠️ मायक्रोफोन परवानगी नाकारली गेली. कृपया ब्राऊझर URL बारमधील कुलूप/माईक आयकॉनवर क्लिक करून मायक्रोफोन सुरु करा.'
+              : language === 'hi'
+              ? '⚠️ माइक्रोफ़ोन अनुमति अस्वीकृत. कृपया ब्राउज़र एड्रेस बार में माइक्रोफ़ोन की अनुमति दें।'
+              : '⚠️ Microphone permission denied. Please allow microphone access in your browser settings.'
+          );
+        } else if (errType === 'no-speech') {
+          setVoiceNotice(
+            language === 'mr'
+              ? 'कोणताही आवाज ऐकू आला नाही. बोलण्यासाठी माईक बटण पुन्हा दाबा.'
+              : 'No speech was detected. Tap the mic to try speaking again.'
+          );
+        } else if (errType === 'network') {
+          setVoiceNotice(
+            language === 'mr'
+              ? 'व्हॉइस सर्व्हर नेटवर्क त्रुटी. इंटरनेट कनेक्शन तपासा.'
+              : 'Voice network error. Please check your internet connection.'
+          );
+        } else {
+          setVoiceNotice(
+            language === 'mr'
+              ? 'व्हॉइस इनपुट त्रुटी. कृपया पुन्हा माईक वर क्लिक करा.'
+              : 'Voice recognition issue. Please tap the mic again or type.'
+          );
+        }
+        setTimeout(() => setVoiceNotice(null), 7000);
+      },
+      onEnd: () => {
+        setIsListening(false);
+        recognitionControllerRef.current = null;
+      }
+    });
+
+    if (controller) {
+      recognitionControllerRef.current = controller;
+      controller.start();
+    }
   };
 
   const handleSendAgentMessage = async (textToSend) => {
@@ -295,8 +411,10 @@ export function FarmerView({
         setRawHistory(res.updated_history);
       }
 
-      // Auto-read response aloud for accessibility
-      speakText(res.agent_response);
+      // Auto-read response aloud if query was spoken by voice
+      if (textToSend) {
+        handleToggleSpeak(res.agent_response);
+      }
 
     } catch (err) {
       console.error("Farmer Agent Error:", err);
@@ -708,13 +826,25 @@ export function FarmerView({
 
               {/* 🔊 Listen Audio Button */}
               <button
-                onClick={() => speakText(localizedRecommendation)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 border shadow-xs ${
-                  isSpeaking ? 'bg-amber-400 text-slate-950 border-amber-500 animate-pulse' : 'bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100'
+                onClick={() => handleToggleSpeak(localizedRecommendation)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 border shadow-xs cursor-pointer ${
+                  isSpeaking && activeSpeakingText === localizedRecommendation
+                    ? 'bg-amber-400 text-slate-950 border-amber-500 animate-pulse'
+                    : 'bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100'
                 }`}
+                title={isSpeaking && activeSpeakingText === localizedRecommendation ? 'Click to stop audio' : 'Listen to advisory'}
               >
-                <Volume2 className="w-4 h-4" />
-                <span>{isSpeaking ? (language === 'mr' ? 'वाचत आहे...' : 'Speaking...') : (language === 'mr' ? '🔊 ऐका' : '🔊 Listen')}</span>
+                {isSpeaking && activeSpeakingText === localizedRecommendation ? (
+                  <>
+                    <VolumeX className="w-4 h-4 text-slate-900" />
+                    <span>{language === 'mr' ? 'थांबवा' : language === 'hi' ? 'रोकें' : 'Stop'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-4 h-4 text-emerald-800" />
+                    <span>{language === 'mr' ? '🔊 ऐका' : language === 'hi' ? '🔊 सुनें' : '🔊 Listen'}</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -832,11 +962,19 @@ export function FarmerView({
                     {/* Speaker Button for Agent Message */}
                     {m.sender === 'agent' && (
                       <button
-                        onClick={() => speakText(m.text)}
-                        className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-amber-400 shrink-0 transition"
-                        title="Listen to response"
+                        onClick={() => handleToggleSpeak(m.text)}
+                        className={`p-2 rounded-full transition shrink-0 cursor-pointer ${
+                          isSpeaking && activeSpeakingText === m.text
+                            ? 'bg-amber-400 text-slate-950 animate-pulse'
+                            : 'bg-slate-800 hover:bg-slate-700 text-amber-400'
+                        }`}
+                        title={isSpeaking && activeSpeakingText === m.text ? 'Click to stop' : 'Listen to response'}
                       >
-                        <Volume2 className="w-3.5 h-3.5" />
+                        {isSpeaking && activeSpeakingText === m.text ? (
+                          <VolumeX className="w-3.5 h-3.5" />
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5" />
+                        )}
                       </button>
                     )}
                   </div>
@@ -867,6 +1005,31 @@ export function FarmerView({
                 ))}
               </div>
 
+              {/* Voice Status / Error Banner */}
+              {voiceNotice && (
+                <div
+                  className={`p-2.5 rounded-lg text-xs font-semibold flex items-center justify-between gap-2 transition ${
+                    isListening
+                      ? 'bg-emerald-950 border border-emerald-500 text-emerald-200'
+                      : 'bg-amber-950 border border-amber-500 text-amber-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${isListening ? 'bg-red-500 animate-ping' : 'bg-amber-400'}`} />
+                    <span>{voiceNotice}</span>
+                  </div>
+                  {isListening && (
+                    <button
+                      type="button"
+                      onClick={toggleVoiceInput}
+                      className="px-2 py-0.5 bg-red-600 hover:bg-red-500 text-white text-[11px] rounded font-bold shrink-0 cursor-pointer"
+                    >
+                      {language === 'mr' ? 'थांबवा' : 'Stop'}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Chat Input + Voice Mic Button */}
               <form
                 onSubmit={(e) => {
@@ -878,13 +1041,19 @@ export function FarmerView({
                 {/* Voice Mic Button */}
                 <button
                   type="button"
-                  onClick={startVoiceInput}
-                  className={`p-2.5 rounded-xl font-bold transition shrink-0 flex items-center justify-center ${
-                    isListening ? 'bg-red-600 text-white animate-bounce' : 'bg-emerald-700 hover:bg-emerald-600 text-white'
+                  onClick={toggleVoiceInput}
+                  className={`p-2.5 rounded-xl font-bold transition shrink-0 flex items-center justify-center cursor-pointer ${
+                    isListening
+                      ? 'bg-red-600 text-white animate-pulse ring-2 ring-red-400'
+                      : 'bg-emerald-700 hover:bg-emerald-600 text-white active:scale-95'
                   }`}
-                  title="Click to speak (Voice Search)"
+                  title={isListening ? 'Listening... Click to stop' : 'Click to speak (Voice Query)'}
                 >
-                  <Mic className="w-4 h-4" />
+                  {isListening ? (
+                    <MicOff className="w-4 h-4 text-white" />
+                  ) : (
+                    <Mic className="w-4 h-4 text-white" />
+                  )}
                 </button>
 
                 <input
@@ -893,7 +1062,7 @@ export function FarmerView({
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder={
                     isListening
-                      ? (language === 'mr' ? 'ऐकत आहे... बोला!' : 'Listening... Speak now!')
+                      ? (language === 'mr' ? '🎙️ ऐकत आहे... बोला!' : '🎙️ Listening... Speak now!')
                       : (language === 'mr' ? 'प्रश्न टाईप करा किंवा बोलण्यासाठी माईक वर क्लिक करा...' : 'Type question or tap mic to speak...')
                   }
                   className="flex-1 min-w-0 px-3.5 py-2.5 text-xs sm:text-sm bg-slate-950 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
@@ -902,7 +1071,7 @@ export function FarmerView({
                 <button
                   type="submit"
                   disabled={chatLoading || !chatInput.trim()}
-                  className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm rounded-xl transition disabled:opacity-50 shrink-0 flex items-center gap-1"
+                  className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm rounded-xl transition disabled:opacity-50 shrink-0 flex items-center gap-1 cursor-pointer"
                 >
                   <Send className="w-4 h-4" />
                   <span className="hidden sm:inline">{language === 'mr' ? 'पाठवा' : 'Send'}</span>

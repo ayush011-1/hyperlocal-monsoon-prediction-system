@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Cpu,
   Database,
@@ -18,9 +18,19 @@ import {
   Languages,
   ShieldCheck,
   Compass,
-  Layers
+  Layers,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { fetchNlpQuery } from '../services/api';
+import {
+  speakText,
+  stopSpeaking,
+  isSpeechRecognitionSupported,
+  createSpeechRecognition
+} from '../utils/speech';
 
 export function PredictionPipeline({
   pipelineInfo,
@@ -40,6 +50,98 @@ export function PredictionPipeline({
   const [nlpLoading, setNlpLoading] = useState(false);
   const [nlpError, setNlpError] = useState(null);
   const [nlpResult, setNlpResult] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceNotice, setVoiceNotice] = useState(null);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {}
+      }
+    };
+  }, []);
+
+  const handleToggleSpeak = (text) => {
+    if (!text) return;
+    if (isSpeaking) {
+      stopSpeaking();
+      setIsSpeaking(false);
+      return;
+    }
+    const success = speakText(text, {
+      language: nlpResult?.nlp_analysis?.language || language || 'en',
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false)
+    });
+    if (!success) setIsSpeaking(false);
+  };
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+      setVoiceNotice(null);
+      return;
+    }
+
+    stopSpeaking();
+    setIsSpeaking(false);
+
+    if (!isSpeechRecognitionSupported()) {
+      setVoiceNotice('Voice input is not supported in this browser. Please use Chrome or Edge.');
+      setTimeout(() => setVoiceNotice(null), 5000);
+      return;
+    }
+
+    const controller = createSpeechRecognition({
+      language: language || 'en',
+      onStart: () => {
+        setIsListening(true);
+        setVoiceNotice('🎙️ Listening... Speak your agricultural query now!');
+      },
+      onInterimResult: (interim) => {
+        setNlpInput(interim);
+      },
+      onFinalResult: (final) => {
+        setIsListening(false);
+        setVoiceNotice(null);
+        setNlpInput(final);
+        recognitionRef.current = null;
+        handleRunNlpQuery(final);
+      },
+      onError: (e) => {
+        setIsListening(false);
+        recognitionRef.current = null;
+        const errType = e.error || e;
+        if (errType === 'not-allowed') {
+          setVoiceNotice('⚠️ Microphone access blocked. Please allow mic in browser settings.');
+        } else if (errType === 'no-speech') {
+          setVoiceNotice('No speech detected. Please tap mic and speak again.');
+        } else {
+          setVoiceNotice('Voice recognition error. Please try typing or tap mic again.');
+        }
+        setTimeout(() => setVoiceNotice(null), 6000);
+      },
+      onEnd: () => {
+        setIsListening(false);
+        recognitionRef.current = null;
+      }
+    });
+
+    if (controller) {
+      recognitionRef.current = controller;
+      controller.start();
+    }
+  };
 
   const presetQueries = [
     { label: 'मराठी (पेरणी सल्ला)', text: 'सोयाबीन पेरणी कधी करावी?', lang: 'mr' },
@@ -214,6 +316,31 @@ export function PredictionPipeline({
                 </div>
               </div>
 
+              {/* Voice Notice Banner */}
+              {voiceNotice && (
+                <div
+                  className={`p-2.5 rounded text-xs font-semibold flex items-center justify-between gap-2 ${
+                    isListening
+                      ? 'bg-emerald-100 border border-emerald-400 text-emerald-900'
+                      : 'bg-amber-100 border border-amber-400 text-amber-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : 'bg-amber-500'}`} />
+                    <span>{voiceNotice}</span>
+                  </div>
+                  {isListening && (
+                    <button
+                      type="button"
+                      onClick={toggleVoiceInput}
+                      className="px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold"
+                    >
+                      Stop
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Natural Language Query Input Form */}
               <form
                 onSubmit={(e) => {
@@ -222,14 +349,24 @@ export function PredictionPipeline({
                 }}
                 className="flex flex-col sm:flex-row items-stretch gap-2"
               >
-                <div className="relative flex-1 min-w-0">
+                <div className="relative flex-1 min-w-0 flex items-center">
                   <input
                     type="text"
                     value={nlpInput}
                     onChange={(e) => setNlpInput(e.target.value)}
-                    placeholder="Enter natural language query in Marathi, Hindi, English, or Hinglish..."
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-white border-2 border-slate-300 rounded focus:border-agri-primary focus:outline-none placeholder:text-slate-400"
+                    placeholder={isListening ? '🎙️ Listening... Speak query now!' : 'Enter natural language query in Marathi, Hindi, English, or Hinglish...'}
+                    className="w-full px-3.5 py-2.5 pr-10 text-xs sm:text-sm bg-white border-2 border-slate-300 rounded focus:border-agri-primary focus:outline-none placeholder:text-slate-400"
                   />
+                  <button
+                    type="button"
+                    onClick={toggleVoiceInput}
+                    className={`absolute right-2 p-1.5 rounded transition cursor-pointer ${
+                      isListening ? 'bg-red-600 text-white animate-pulse' : 'text-slate-500 hover:text-agri-primary hover:bg-slate-100'
+                    }`}
+                    title={isListening ? 'Stop listening' : 'Speak query with mic'}
+                  >
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
                 </div>
 
                 <button
@@ -366,9 +503,33 @@ export function PredictionPipeline({
                         <Languages className="w-4 h-4 text-emerald-400" />
                         Stage 5: Dialect-Specific Agromet Advisory Response
                       </span>
-                      <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">
-                        Target Dialect: {nlpResult.nlp_analysis?.language_label}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSpeak(nlpResult.response_text)}
+                          className={`px-2 py-1 rounded text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                            isSpeaking
+                              ? 'bg-amber-400 text-slate-950 animate-pulse'
+                              : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                          }`}
+                          title="Listen to synthesized advisory response"
+                        >
+                          {isSpeaking ? (
+                            <>
+                              <VolumeX className="w-3.5 h-3.5 text-slate-950" />
+                              <span>Stop</span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>🔊 Listen</span>
+                            </>
+                          )}
+                        </button>
+                        <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">
+                          Target Dialect: {nlpResult.nlp_analysis?.language_label}
+                        </span>
+                      </div>
                     </div>
 
                     <p className="text-sm font-medium text-slate-100 leading-relaxed bg-slate-950 p-3 rounded border border-slate-800">
