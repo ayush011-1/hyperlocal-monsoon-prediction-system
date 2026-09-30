@@ -2,7 +2,8 @@ import os
 import json
 import logging
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 # Try loading .env variables
@@ -73,7 +74,7 @@ app.include_router(agent_router)
 app.include_router(notifications_router)
 app.include_router(stream_router)
 
-@app.get("/", tags=["System Information"])
+@app.get("/api/system-info", tags=["System Information"])
 def read_root():
     return {
         "system": "Hyperlocal Monsoon Onset & Break Prediction System (Block/Village Scale)",
@@ -184,6 +185,24 @@ def get_prediction_pipeline_info():
             }
         ]
     }
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SERVE PRODUCTION FRONTEND SPA (Unified Fullstack Deployment)
+# ══════════════════════════════════════════════════════════════════════════════
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+if os.path.exists(frontend_dist):
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
+    async def serve_spa(full_path: str):
+        if full_path.startswith("api") or full_path.startswith("docs") or full_path.startswith("openapi.json") or full_path.startswith("redoc"):
+            return JSONResponse(status_code=404, content={"error": "Not Found"})
+        file_path = os.path.join(frontend_dist, full_path)
+        if full_path and os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
 
 if __name__ == "__main__":
     import uvicorn
