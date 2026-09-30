@@ -245,14 +245,14 @@ export function FarmerView({
     <div className="w-full max-w-5xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4 py-2 font-sans">
 
       {/* 🌟 Top Welcome Banner */}
-      <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-green-800 text-white rounded-2xl p-4 sm:p-6 shadow-md border-b-4 border-amber-400">
+      <div className="bg-agri-primary text-white rounded-xl p-4 sm:p-5 shadow-xs border-b-4 border-amber-500">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="bg-amber-400 text-slate-950 font-black text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="bg-amber-500 text-slate-950 font-black text-[10px] sm:text-[11px] px-2.5 py-0.5 rounded uppercase tracking-wider">
                 SIH PS 26086
               </span>
-              <span className="text-emerald-100 text-xs font-semibold">
+              <span className="text-emerald-200 text-xs font-semibold">
                 {language === 'mr' ? 'ग्राम पंचायत / गट पातळी अंदाज' : language === 'hi' ? 'ग्राम पंचायत स्तर मौसम अंदाज' : 'Village-Cluster Weather Support'}
               </span>
             </div>
@@ -263,7 +263,7 @@ export function FarmerView({
                 ? '🌾 किसान मौसम एवं फसल सलाह सहायक'
                 : '🌾 Kisan Agromet Weather & Crop Sahayak'}
             </h1>
-            <p className="text-xs sm:text-sm text-emerald-100 mt-1">
+            <p className="text-xs sm:text-sm text-slate-200 mt-1">
               {language === 'mr'
                 ? 'तुमच्या शेतासाठी अचूक पाऊस, खंडाचा धोका व पेरणीचा सल्ला सहज समजणाऱ्या भाषेत.'
                 : language === 'hi'
@@ -275,7 +275,7 @@ export function FarmerView({
           {hasCheckedFarm && !isEditingSetup && (
             <button
               onClick={() => setIsEditingSetup(true)}
-              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-4 py-2 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1.5 shadow shrink-0 active:scale-95"
+              className="bg-amber-600 hover:bg-amber-500 text-white font-extrabold px-3.5 py-2 rounded text-xs sm:text-sm transition flex items-center justify-center gap-1.5 shadow-xs border border-amber-400 shrink-0 cursor-pointer"
             >
               <span>✏️ {language === 'mr' ? 'शेताची माहिती बदला' : language === 'hi' ? 'खेत की जानकारी बदलें' : 'Change Farm Details'}</span>
             </button>

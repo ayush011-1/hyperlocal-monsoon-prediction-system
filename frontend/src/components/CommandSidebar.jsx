@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Calendar, Sprout, Layers, Mountain, CheckCircle2 } from 'lucide-react';
+import { MapPin, Calendar, Sprout, Layers, Mountain, CheckCircle2, Sliders } from 'lucide-react';
 
 export function CommandSidebar({
   locationsData,
@@ -56,10 +56,10 @@ export function CommandSidebar({
 
   const cropList = supportedCrops.length > 0 ? supportedCrops : [
     { id: 'soybean', name: 'Soybean', marathi_name: 'सोयाबीन', hindi_name: 'सोयाबीन' },
-    { id: 'rice', name: 'Rice', marathi_name: 'भात', hindi_name: 'धान' },
-    { id: 'maize', name: 'Maize', marathi_name: 'मका', hindi_name: 'मक्का' },
+    { id: 'rice', name: 'Rice (Paddy)', marathi_name: 'भात', hindi_name: 'धान' },
+    { id: 'maize', name: 'Maize (Corn)', marathi_name: 'मका', hindi_name: 'मक्का' },
     { id: 'cotton', name: 'Cotton', marathi_name: 'कापूस', hindi_name: 'कपास' },
-    { id: 'bajra', name: 'Bajra', marathi_name: 'बाजरी', hindi_name: 'बाजरा' },
+    { id: 'bajra', name: 'Bajra (Millet)', marathi_name: 'बाजरी', hindi_name: 'बाजरा' },
   ];
 
   const periods = [7, 14, 21, 30];
@@ -67,18 +67,18 @@ export function CommandSidebar({
   return (
     <div className="bg-white border border-slate-300 rounded-md shadow-xs p-4 space-y-4">
       {/* Sidebar Header */}
-      <div className="border-b border-slate-200 pb-2 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-agri-secondary flex items-center gap-1.5">
-          <Layers className="w-4 h-4 text-agri-primary" />
+      <div className="border-b border-slate-200 pb-2.5 flex items-center justify-between">
+        <h3 className="text-xs font-extrabold uppercase tracking-wider text-agri-secondary flex items-center gap-1.5">
+          <Sliders className="w-4 h-4 text-agri-primary shrink-0" />
           <span>{t.select_location}</span>
         </h3>
-        <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">
-          LIVE AGROMET
+        <span className="text-[10px] font-mono bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded font-bold border border-emerald-300">
+          5KM AGROMET GRID
         </span>
       </div>
 
       {/* 1. Location Hierarchy Cascading Selectors */}
-      <div className="space-y-2.5 text-xs">
+      <div className="space-y-3 text-xs">
         {/* State */}
         <div>
           <label className="block font-bold text-slate-700 mb-1">
@@ -92,13 +92,14 @@ export function CommandSidebar({
 
         {/* District */}
         <div>
-          <label className="block font-bold text-slate-700 mb-1">
+          <label htmlFor="district-select" className="block font-bold text-slate-700 mb-1">
             {t.district}
           </label>
           <select
+            id="district-select"
             value={selectedDistrict}
             onChange={(e) => handleDistrictChange(e.target.value)}
-            className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 font-medium text-slate-900 focus:ring-1 focus:ring-agri-primary focus:border-agri-primary"
+            className="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:ring-1 focus:ring-agri-primary focus:border-agri-primary cursor-pointer"
           >
             {districts.map((d) => (
               <option key={d.id} value={d.id}>
@@ -110,13 +111,14 @@ export function CommandSidebar({
 
         {/* Block / Taluka */}
         <div>
-          <label className="block font-bold text-slate-700 mb-1">
+          <label htmlFor="block-select" className="block font-bold text-slate-700 mb-1">
             {t.block}
           </label>
           <select
+            id="block-select"
             value={selectedBlock}
             onChange={(e) => handleBlockChange(e.target.value)}
-            className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 font-medium text-slate-900 focus:ring-1 focus:ring-agri-primary focus:border-agri-primary"
+            className="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:ring-1 focus:ring-agri-primary focus:border-agri-primary cursor-pointer"
           >
             {blocks.map((b) => (
               <option key={b.id} value={b.id}>
@@ -128,13 +130,14 @@ export function CommandSidebar({
 
         {/* Panchayat / Village */}
         <div>
-          <label className="block font-bold text-slate-700 mb-1">
+          <label htmlFor="panchayat-select" className="block font-bold text-slate-700 mb-1">
             {t.panchayat}
           </label>
           <select
+            id="panchayat-select"
             value={selectedPanchayat}
             onChange={(e) => setSelectedPanchayat(e.target.value)}
-            className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 font-medium text-slate-900 focus:ring-1 focus:ring-agri-primary focus:border-agri-primary"
+            className="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:ring-1 focus:ring-agri-primary focus:border-agri-primary cursor-pointer"
           >
             {panchayats.map((p) => (
               <option key={p.id} value={p.id}>
@@ -145,17 +148,17 @@ export function CommandSidebar({
         </div>
 
         {/* Micro-Catchment Physical Meta */}
-        <div className="bg-slate-50 border border-slate-200 rounded p-2 text-[11px] space-y-1 text-slate-600">
+        <div className="bg-slate-50 border border-slate-200 rounded p-2.5 text-[11px] space-y-1 text-slate-600">
           <div className="flex justify-between">
-            <span className="flex items-center gap-1">
-              <Mountain className="w-3 h-3 text-slate-500" />
+            <span className="flex items-center gap-1 font-medium">
+              <Mountain className="w-3 h-3 text-slate-500 shrink-0" />
               Elevation:
             </span>
-            <strong className="text-slate-800 font-mono">{currentPanchayatObj?.elevation_m || 570} m</strong>
+            <strong className="text-slate-900 font-mono">{currentPanchayatObj?.elevation_m || 570} m</strong>
           </div>
           <div className="flex justify-between">
-            <span>Terrain Lift:</span>
-            <span className="text-emerald-700 font-medium">Deccan Plateau Slope</span>
+            <span className="font-medium">Terrain Lift:</span>
+            <span className="text-emerald-800 font-semibold">Deccan Plateau Slope</span>
           </div>
         </div>
       </div>
@@ -163,7 +166,7 @@ export function CommandSidebar({
       {/* 2. Forecast Window Selector */}
       <div className="border-t border-slate-200 pt-3">
         <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
-          <Calendar className="w-3.5 h-3.5 text-agri-secondary" />
+          <Calendar className="w-3.5 h-3.5 text-agri-secondary shrink-0" />
           <span>{t.forecast_window}</span>
         </label>
         <div className="grid grid-cols-4 gap-1">
@@ -173,7 +176,7 @@ export function CommandSidebar({
               <button
                 key={d}
                 onClick={() => setForecastDays(d)}
-                className={`py-1.5 text-xs font-bold rounded border transition text-center ${
+                className={`py-1.5 text-xs font-extrabold rounded border transition text-center cursor-pointer ${
                   active
                     ? 'bg-agri-secondary text-white border-agri-secondary shadow-xs'
                     : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -192,7 +195,7 @@ export function CommandSidebar({
       {/* 3. Target Kharif Crop Selection */}
       <div className="border-t border-slate-200 pt-3">
         <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
-          <Sprout className="w-3.5 h-3.5 text-agri-primary" />
+          <Sprout className="w-3.5 h-3.5 text-agri-primary shrink-0" />
           <span>{t.select_crop}</span>
         </label>
         <div className="space-y-1">
@@ -206,14 +209,14 @@ export function CommandSidebar({
               <button
                 key={c.id}
                 onClick={() => setSelectedCrop(c.id)}
-                className={`w-full text-left px-2.5 py-1.5 text-xs rounded border transition flex items-center justify-between ${
+                className={`w-full text-left px-2.5 py-1.5 text-xs rounded border transition flex items-center justify-between cursor-pointer ${
                   active
                     ? 'bg-agri-primary text-white border-agri-primary font-bold shadow-xs'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 font-medium'
                 }`}
               >
                 <span>{displayName}</span>
-                {active && <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />}
+                {active && <CheckCircle2 className="w-3.5 h-3.5 text-amber-300 shrink-0" />}
               </button>
             );
           })}
@@ -222,13 +225,14 @@ export function CommandSidebar({
 
       {/* 4. Crop Growth Stage */}
       <div className="border-t border-slate-200 pt-3">
-        <label className="block text-xs font-bold text-slate-700 mb-1">
+        <label htmlFor="stage-select" className="block text-xs font-bold text-slate-700 mb-1">
           Crop Stage (पिकाची अवस्था)
         </label>
         <select
+          id="stage-select"
           value={selectedCropStage || 'sowing'}
           onChange={(e) => setSelectedCropStage && setSelectedCropStage(e.target.value)}
-          className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 font-medium text-slate-900 text-xs focus:ring-1 focus:ring-agri-primary"
+          className="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 font-medium text-slate-900 text-xs focus:ring-1 focus:ring-agri-primary cursor-pointer"
         >
           <option value="sowing">Pre-sowing / Sowing (पेरणी)</option>
           <option value="germination">Germination / Emergence (अंकुरण)</option>
@@ -242,7 +246,7 @@ export function CommandSidebar({
       <div className="border-t border-slate-200 pt-3">
         <button
           onClick={() => onGenerateIntelligence && onGenerateIntelligence()}
-          className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2 px-3 rounded shadow transition flex items-center justify-center gap-1.5 border border-amber-300"
+          className="w-full bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-extrabold text-xs py-2.5 px-3 rounded shadow-xs transition flex items-center justify-center gap-1.5 border border-amber-400 cursor-pointer"
         >
           <span>⚡ Generate Intelligence</span>
         </button>
@@ -250,3 +254,4 @@ export function CommandSidebar({
     </div>
   );
 }
+
