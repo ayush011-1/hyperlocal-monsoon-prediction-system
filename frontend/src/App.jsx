@@ -281,11 +281,17 @@ export default function App() {
           />
         )}
 
-        {/* ML Pipeline */}
+        {/* ML & NLP Prediction Pipeline */}
         {currentView === 'pipeline' && (
           <PredictionPipeline
             pipelineInfo={pipelineInfo}
             currentProbabilities={forecastData?.probabilities}
+            selectedDistrict={selectedDistrict}
+            selectedBlock={selectedBlock}
+            selectedPanchayat={selectedPanchayat}
+            selectedCrop={selectedCrop}
+            forecastDays={forecastDays}
+            language={language}
           />
         )}
       </main>

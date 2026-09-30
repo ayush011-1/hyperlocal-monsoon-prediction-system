@@ -4,6 +4,7 @@ Powered by trained XGBoost and Random Forest models on multi-decadal IMD gridded
 """
 
 import os
+import re
 import json
 import math
 import joblib
@@ -23,7 +24,6 @@ class MLPredictorService:
         try:
             with open(locations_file, "r", encoding="utf-8") as f:
                 loc_data = json.load(f)
-
             states = loc_data.get("states", [])
             districts_list = []
             if states:
@@ -35,13 +35,15 @@ class MLPredictorService:
             for d in districts_list:
                 d_name = d["name"].lower()
                 d_id = d["id"].lower()
-                d_meta = {"lat": d["center"][0], "lng": d["center"][1], "elevation": 550, "terrain_type": "Deccan Plateau"}
+                d_clean = re.sub(r'\(.*?\)', '', d["name"]).strip().lower()
+                d_meta = {"lat": d["center"][0], "lng": d["center"][1], "elevation": 550, "terrain_type": "Deccan Plateau", "district": d_id}
                 self.locations_map[d_name] = d_meta
                 self.locations_map[d_id] = d_meta
+                self.locations_map[d_clean] = d_meta
                 for b in d.get("blocks", []):
                     b_name = b["name"].lower()
                     b_id = b["id"].lower()
-                    b_meta = {"lat": b["center"][0], "lng": b["center"][1], "elevation": 560, "terrain_type": "Deccan Plateau"}
+                    b_meta = {"lat": b["center"][0], "lng": b["center"][1], "elevation": 560, "terrain_type": "Deccan Plateau", "district": d_id, "block": b_id}
                     self.locations_map[b_name] = b_meta
                     self.locations_map[b_id] = b_meta
                     for p in b.get("panchayats", []):
@@ -51,10 +53,20 @@ class MLPredictorService:
                             "lat": p["lat"],
                             "lng": p["lng"],
                             "elevation": p.get("elevation_m", 560),
-                            "terrain_type": p.get("terrain_type", "Deccan Plateau Slope")
+                            "terrain_type": p.get("terrain_type", "Deccan Plateau Slope"),
+                            "district": d_id,
+                            "block": b_id
                         }
                         self.locations_map[p_name] = p_meta
                         self.locations_map[p_id] = p_meta
+                        self.locations_map[p_id.replace("_", " ")] = p_meta
+                        clean_tokens = re.sub(r'[^a-zA-Z0-9\s]', '', p_name).split()
+                        for tok in clean_tokens:
+                            if len(tok) >= 3 and tok not in self.locations_map:
+                                self.locations_map[tok] = p_meta
+                        if "vanni" in p_id or "vani" in p_id:
+                            self.locations_map["wani"] = p_meta
+                            self.locations_map["vani"] = p_meta
         except Exception as e:
             print(f"Warning loading locations: {e}")
 
@@ -108,22 +120,31 @@ class MLPredictorService:
         }
 
     def _get_geo_params(self, district: str, block: str, panchayat: str):
-        p_key = (panchayat or "").lower()
-        b_key = (block or "").lower()
-        d_key = (district or "").lower()
+        p_key = (panchayat or "").strip().lower()
+        b_key = (block or "").strip().lower()
+        d_key = (district or "").strip().lower()
 
+        geo = None
         if p_key in self.locations_map:
-            geo = self.locations_map[p_key]
-        elif b_key in self.locations_map:
+            p_geo = self.locations_map[p_key]
+            # Verify consistent with district / block if given
+            p_dist = p_geo.get("district", "")
+            p_blk = p_geo.get("block", "")
+            dist_match = (not d_key) or (p_dist in d_key) or (d_key in p_dist) or ("ahilya" in d_key and "ahilya" in p_dist)
+            blk_match = (not b_key) or (p_blk in b_key) or (b_key in p_blk)
+            if dist_match and blk_match:
+                geo = p_geo
+            elif not b_key and not d_key:
+                geo = p_geo
+
+        if not geo and b_key in self.locations_map:
             geo = self.locations_map[b_key]
-        elif d_key in self.locations_map:
-            geo = self.locations_map[d_key]
-        else:
+        elif not geo:
             geo = {"lat": 18.5204, "lng": 73.8567, "elevation": 560, "terrain_type": "Deccan Plateau Slope"}
 
         lat = geo["lat"]
         lng = geo["lng"]
-        elevation = geo["elevation"]
+        elevation = geo.get("elevation", 560)
         terrain_type = geo.get("terrain_type", "Deccan Plateau Slope")
         ghats_dist_km = max(5.0, (lng - 73.3) * 111.0)
         return lat, lng, elevation, ghats_dist_km, terrain_type

@@ -6,7 +6,7 @@ as the strict single source of truth for predictions and recommendations.
 """
 
 from typing import Dict, Any, List, Optional
-from services.nlp_engine import nlp_engine
+from services.nlp_engine import nlp_engine, to_marathi_place
 from services.ml_predictor import ml_predictor
 from services.advisory_engine import advisory_engine
 
@@ -22,7 +22,8 @@ class FarmerSupportAgent:
         block: str = "Haveli",
         panchayat: str = "Wagholi",
         crop: str = "soybean",
-        days: int = 14
+        days: int = 14,
+        language: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Executes the Farmer Support Agent workflow:
@@ -30,8 +31,8 @@ class FarmerSupportAgent:
         """
         history = conversation_history or []
 
-        # 1. NLP Parsing
-        lang_code, lang_label = nlp_engine.detect_language(message)
+        # 1. NLP Parsing with preferred language support
+        lang_code, lang_label = nlp_engine.detect_language(message, preferred_lang=language)
         intent = nlp_engine.detect_intent(message)
         entities = nlp_engine.extract_entities(
             message,
@@ -160,26 +161,36 @@ class FarmerSupportAgent:
 
         # MARATHI (mr)
         if lang_code == "mr":
-            if intent == "sowing_advisory" or "पेरणी" in message:
+            mr_d = to_marathi_place(district)
+            mr_b = to_marathi_place(block)
+            mr_p = to_marathi_place(panchayat)
+
+            if intent == "monsoon_onset" or any(w in message.lower() for w in ["आगमन", "कधी येईल", "कधी पडेल", "कधी पडणार", "पाऊस कधी", "paus kadhi", "kadhi yenar", "kadhi yeil"]):
                 if onset_prob >= 75:
-                    return f"नमस्कार शेतकरी बंधूंनो, {panchayat} ({block}, {district}) परिसरात मान्सून आगमनाची शक्यता {onset_prob}% आहे. {rec_mr} जमिनीत पुरेसा ओलावा (>५० मिमी पाऊस) झाल्याची खात्री करूनच पेरणी करा. {m_str_mr}"
+                    return f"नमस्कार शेतकरी बंधूंनो! 📍 {mr_p} ({mr_b}, {mr_d}) परिसरात पुढील {days} दिवसांत मान्सून आगमनाची दाट शक्यता ({onset_prob}%) आहे. {rec_mr} जमिनीत किमान ५० मिमी पाऊस साचल्याची खात्री करूनच पेरणी सुरू करा."
                 else:
-                    return f"नमस्कार शेतकरी बंधूंनो, {panchayat} भागात आगमनाची शक्यता कमी ({onset_prob}%) आहे. {rec_mr} पाऊस सुरू होईपर्यंत पेरणी घाई करू नका."
-            
-            elif intent == "weather_forecast" or "पाऊस कसा आहे" in message:
-                return f"📍 {panchayat} गावात पुढील {days} दिवसांचा हवामान अंदाज: पावसाच्या आगमनाची शक्यता {onset_prob}%, खंडाचा धोका {break_prob}%, आणि अतिवृष्टीची शक्यता {heavy_prob}% आहे. हवामान संचलित कृषी सल्ला: {rec_mr}"
+                    return f"नमस्कार शेतकरी बंधूंनो! 📍 {mr_p} परिसरात पुढील {days} दिवसांत मान्सून आगमनाची शक्यता {onset_prob}% आहे. {rec_mr} पाऊस स्थिरावल्याशिवाय पेरणीची घाई करू नका."
 
-            elif intent == "dry_spell_risk" or "खंड" in message:
-                return f"⚠️ {panchayat} परिसरात पुढील {days} दिवसांत पावसाचा खंड पडण्याची (Dry Spell) शक्यता {break_prob}% आहे. {rec_mr} पिकाला पाण्याचा ताण बसू नये म्हणून तुषार किंवा ठिबक सिंचनाची सोय तयार ठेवा."
+            elif intent == "sowing_advisory" or any(w in message.lower() for w in ["पेरणी", "पेरावे", "perani", "perava"]):
+                if onset_prob >= 75:
+                    return f"नमस्कार शेतकरी बंधूंनो! 🌾 {mr_p} ({mr_b}, {mr_d}) परिसरात मान्सून आगमनाची शक्यता {onset_prob}% आहे. {rec_mr} जमिनीत पुरेसा ओलावा (>५० मिमी पाऊस) झाल्याची खात्री करूनच {mr_crop} पेरणी करा.{m_str_mr}"
+                else:
+                    return f"नमस्कार शेतकरी बंधूंनो! 🌾 {mr_p} भागात सध्या आगमनाची शक्यता {onset_prob}% आहे. {rec_mr} पुरेशा पावसाशिवाय {mr_crop} पेरणीची घाई करू नका."
 
-            elif intent == "heavy_rainfall_risk" or "मुसळधार" in message or "धोका" in message:
-                return f"🚨 {panchayat} क्षेत्रात मुसळधार / अतिवृष्टीची शक्यता {heavy_prob}% नोंदवली आहे. {rec_mr} शेतातील सऱ्या आणि पाटातील पाण्याचा निचरा मोकळा करा जेणेकरून बियाणे कुजणार नाही."
+            elif intent == "dry_spell_risk" or any(w in message.lower() for w in ["खंड", "ताण", "dry spell", "khand"]):
+                return f"⚠️ {mr_p} परिसरात पुढील {days} दिवसांत पावसाचा खंड पडण्याची (Dry Spell) शक्यता {break_prob}% आहे. {rec_mr} पिकाला पाण्याचा ताण बसू नये म्हणून तुषार किंवा ठिबक सिंचनाची सोय तयार ठेवा."
 
-            elif intent == "irrigation_advisory" or "पाणी" in message:
-                return f"💧 {mr_crop} पिकासाठी पाणी व्यवस्थापन सल्ला ({panchayat}): खंडाचा धोका {break_prob}% आहे. {rec_mr} जमिनीत ७.५ सेंमी ओलावा टिकून राहण्यासाठी हलके सिंचन द्या."
+            elif intent == "heavy_rainfall_risk" or any(w in message.lower() for w in ["मुसळधार", "अतिवृष्टी", "धोका", "heavy", "dhoka"]):
+                return f"🚨 {mr_p} क्षेत्रात मुसळधार / अतिवृष्टीची शक्यता {heavy_prob}% नोंदवली आहे. {rec_mr} शेतातील सऱ्या आणि पाटातील पाण्याचा निचरा मोकळा करा जेणेकरून बियाणे कुजणार नाही."
+
+            elif intent == "irrigation_advisory" or any(w in message.lower() for w in ["पाणी", "सिंचन", "पानी", "water"]):
+                return f"💧 {mr_p} येथे {mr_crop} पिकासाठी पाणी व्यवस्थापन सल्ला: खंडाचा धोका {break_prob}% आहे. {rec_mr} जमिनीत ओलावा टिकून राहण्यासाठी सूक्ष्म सिंचनाचा वापर करा."
+
+            elif intent == "weather_forecast" or any(w in message.lower() for w in ["हवामान", "अंदाज", "पाऊस कसा", "paus"]):
+                return f"📍 {mr_p} ({mr_b}, {mr_d}) गावात पुढील {days} दिवसांचा हवामान अंदाज: मान्सून आगमनाची शक्यता {onset_prob}%, पावसातील खंडाचा धोका {break_prob}%, आणि अतिवृष्टीची शक्यता {heavy_prob}% आहे. कृषी सल्ला: {rec_mr}"
 
             else:
-                return f"नमस्कार शेतकरी बंधूंनो, {panchayat} करिता पुढील {days} दिवसांचा अंदाज: आगमनाची शक्यता {onset_prob}%, खंड {break_prob}%, अतिवृष्टी {heavy_prob}%. {mr_crop} पिकासाठी सल्ला: {rec_mr}"
+                return f"नमस्कार शेतकरी बंधूंनो! 🌾 {mr_p} ({mr_b}, {mr_d}) करिता पुढील {days} दिवसांचा अंदाज: आगमनाची शक्यता {onset_prob}%, खंड {break_prob}%, अतिवृष्टी {heavy_prob}%. {mr_crop} पिकासाठी सल्ला: {rec_mr}"
 
         # HINDI (hi)
         elif lang_code == "hi":

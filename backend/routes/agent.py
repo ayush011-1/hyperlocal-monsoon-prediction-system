@@ -18,6 +18,7 @@ class AgentChatRequest(BaseModel):
     panchayat: Optional[str] = "Wagholi"
     crop: Optional[str] = "soybean"
     days: Optional[int] = 14
+    language: Optional[str] = "en"
 
 @router.post("/chat")
 def process_agent_chat_post(req: AgentChatRequest):
@@ -32,7 +33,8 @@ def process_agent_chat_post(req: AgentChatRequest):
         block=req.block or "Haveli",
         panchayat=req.panchayat or "Wagholi",
         crop=req.crop or "soybean",
-        days=req.days or 14
+        days=req.days or 14,
+        language=req.language or "en"
     )
 
 @router.get("/chat")
@@ -42,7 +44,8 @@ def process_agent_chat_get(
     block: Optional[str] = Query("Haveli"),
     panchayat: Optional[str] = Query("Wagholi"),
     crop: Optional[str] = Query("soybean"),
-    days: Optional[int] = Query(14)
+    days: Optional[int] = Query(14),
+    language: Optional[str] = Query("en")
 ):
     """
     GET version of farmer support chat endpoint.
@@ -54,5 +57,6 @@ def process_agent_chat_get(
         block=block or "Haveli",
         panchayat=panchayat or "Wagholi",
         crop=crop or "soybean",
-        days=days or 14
+        days=days or 14,
+        language=language or "en"
     )

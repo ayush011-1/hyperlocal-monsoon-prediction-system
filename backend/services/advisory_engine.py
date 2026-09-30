@@ -51,6 +51,24 @@ CROP_PROFILES = {
         "sowing_ideal_rain_threshold_mm": 30.0,
         "dry_spell_tolerance_days": 21,
         "waterlogging_sensitivity": "High"
+    },
+    "sugarcane": {
+        "name": "Sugarcane",
+        "marathi_name": "ऊस",
+        "hindi_name": "गन्ना",
+        "sowing_moisture_depth_cm": 12.0,
+        "sowing_ideal_rain_threshold_mm": 65.0,
+        "dry_spell_tolerance_days": 15,
+        "waterlogging_sensitivity": "Low"
+    },
+    "groundnut": {
+        "name": "Groundnut",
+        "marathi_name": "भूईमूग",
+        "hindi_name": "मूंगफली",
+        "sowing_moisture_depth_cm": 5.0,
+        "sowing_ideal_rain_threshold_mm": 45.0,
+        "dry_spell_tolerance_days": 12,
+        "waterlogging_sensitivity": "High"
     }
 }
 

@@ -21,10 +21,10 @@ const awsIcon = new L.DivIcon({
 function RecenterMap({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
-    if (center && center[0] && center[1]) {
-      map.setView(center, zoom || 12);
+    if (center && typeof center[0] === 'number' && typeof center[1] === 'number') {
+      map.flyTo(center, zoom || 12, { duration: 1.2 });
     }
-  }, [center, zoom, map]);
+  }, [center?.[0], center?.[1], zoom, map]);
   return null;
 }
 
@@ -117,11 +117,11 @@ export function GisMap({ gisFeatures, selectedLocationName, t }) {
                   <strong className="text-agri-secondary block border-b pb-1">{stn.name}</strong>
                   <div className="flex justify-between gap-3 text-slate-700">
                     <span>24h Rainfall:</span>
-                    <strong>{stn.last_24h_rainfall_mm} mm</strong>
+                    <strong>{stn.last_24h_rainfall_mm ?? stn.rainfall_24h_mm ?? 0} mm</strong>
                   </div>
                   <div className="flex justify-between gap-3 text-slate-700">
                     <span>Temp / RH:</span>
-                    <span>{stn.temp_c}°C / {stn.rh_pct}%</span>
+                    <span>{stn.temp_c}°C / {stn.rh_pct ?? stn.humidity_pct ?? 70}%</span>
                   </div>
                   <div className="text-[10px] text-slate-400 font-mono pt-1">IMD AWS Network</div>
                 </div>

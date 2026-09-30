@@ -67,25 +67,25 @@ export async function fetchPipelineInfo() {
   return res.json();
 }
 
-export async function fetchNlpQuery(query, district = 'Pune', block = 'Haveli', panchayat = 'Wagholi', crop = 'soybean', days = 14) {
+export async function fetchNlpQuery(query, district = 'Pune', block = 'Haveli', panchayat = 'Wagholi', crop = 'soybean', days = 14, language = null) {
   const res = await fetch(`${API_BASE}/nlp/query`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ query, district, block, panchayat, crop, days })
+    body: JSON.stringify({ query, district, block, panchayat, crop, days, language })
   });
   if (!res.ok) throw new Error('Failed to execute NLP query');
   return res.json();
 }
 
-export async function fetchAgentChat(message, conversation_history = [], district = 'Pune', block = 'Haveli', panchayat = 'Wagholi', crop = 'soybean', days = 14) {
+export async function fetchAgentChat(message, conversation_history = [], district = 'Pune', block = 'Haveli', panchayat = 'Wagholi', crop = 'soybean', days = 14, language = 'en') {
   const res = await fetch(`${API_BASE}/agent/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ message, conversation_history, district, block, panchayat, crop, days })
+    body: JSON.stringify({ message, conversation_history, district, block, panchayat, crop, days, language })
   });
   if (!res.ok) throw new Error('Failed to send message to Farmer Support Agent');
   return res.json();

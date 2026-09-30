@@ -267,7 +267,8 @@ export function FarmerView({
         selectedBlock || 'Haveli',
         selectedPanchayat || 'Wagholi',
         selectedCrop || 'soybean',
-        forecastDays || 14
+        forecastDays || 14,
+        language || 'mr'
       );
 
       const agentMsgObj = {
@@ -280,6 +281,12 @@ export function FarmerView({
           breakRisk: res.ml_verified_data?.break_dry_spell_percent,
           heavyRain: res.ml_verified_data?.heavy_rainfall_percent,
           urgency: res.advisory_verified_data?.urgency_level
+        },
+        nlpMeta: {
+          intent: res.intent,
+          lang: res.language_label || res.language,
+          crop: res.context?.crop_display,
+          location: res.context?.panchayat ? `${res.context.panchayat}, ${res.context.block}` : null
         }
       };
 
@@ -788,7 +795,38 @@ export function FarmerView({
                           : 'bg-slate-900 border border-slate-700 text-slate-100 rounded-tl-none shadow-md'
                       }`}
                     >
-                      {m.text}
+                      <div>{m.text}</div>
+
+                      {/* Verified NLP Pipeline & Grounded ML Chips */}
+                      {m.sender === 'agent' && (m.verifiedData || m.nlpMeta) && (
+                        <div className="mt-2 pt-2 border-t border-slate-800 flex flex-wrap items-center gap-1.5 text-[10px]">
+                          {m.nlpMeta?.lang && (
+                            <span className="bg-sky-950 text-sky-300 border border-sky-800 px-2 py-0.5 rounded font-bold">
+                              🗣️ {m.nlpMeta.lang}
+                            </span>
+                          )}
+                          {m.nlpMeta?.intent && (
+                            <span className="bg-purple-950 text-purple-300 border border-purple-800 px-2 py-0.5 rounded font-bold">
+                              🎯 {m.nlpMeta.intent.replace(/_/g, ' ')}
+                            </span>
+                          )}
+                          {m.verifiedData?.onset !== undefined && (
+                            <span className="bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold">
+                              Onset: {m.verifiedData.onset}%
+                            </span>
+                          )}
+                          {m.verifiedData?.breakRisk !== undefined && (
+                            <span className="bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded font-mono font-bold">
+                              Break: {m.verifiedData.breakRisk}%
+                            </span>
+                          )}
+                          {m.verifiedData?.heavyRain !== undefined && (
+                            <span className="bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded font-mono font-bold">
+                              Heavy: {m.verifiedData.heavyRain}%
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Speaker Button for Agent Message */}

@@ -17,6 +17,7 @@ class QueryRequest(BaseModel):
     panchayat: Optional[str] = "Wagholi"
     crop: Optional[str] = "soybean"
     days: Optional[int] = 14
+    language: Optional[str] = None
 
 @router.post("/query")
 def process_nlp_query_post(req: QueryRequest):
@@ -30,7 +31,8 @@ def process_nlp_query_post(req: QueryRequest):
         current_block=req.block or "Haveli",
         current_panchayat=req.panchayat or "Wagholi",
         current_crop=req.crop or "soybean",
-        current_days=req.days or 14
+        current_days=req.days or 14,
+        preferred_language=req.language
     )
 
 @router.get("/query")
@@ -40,7 +42,8 @@ def process_nlp_query_get(
     block: Optional[str] = Query("Haveli"),
     panchayat: Optional[str] = Query("Wagholi"),
     crop: Optional[str] = Query("soybean"),
-    days: Optional[int] = Query(14)
+    days: Optional[int] = Query(14),
+    language: Optional[str] = Query(None)
 ):
     """
     GET version of natural language agricultural query endpoint.
@@ -51,5 +54,6 @@ def process_nlp_query_get(
         current_block=block or "Haveli",
         current_panchayat=panchayat or "Wagholi",
         current_crop=crop or "soybean",
-        current_days=days or 14
+        current_days=days or 14,
+        preferred_language=language
     )
