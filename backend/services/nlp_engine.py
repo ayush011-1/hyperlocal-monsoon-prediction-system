@@ -24,7 +24,15 @@ class MultilingualNLPEngine:
             with open(locations_file, "r", encoding="utf-8") as f:
                 loc_data = json.load(f)
             
-            for district in loc_data.get("districts", []):
+            states = loc_data.get("states", [])
+            districts_list = []
+            if states:
+                for s in states:
+                    districts_list.extend(s.get("districts", []))
+            else:
+                districts_list = loc_data.get("districts", [])
+
+            for district in districts_list:
                 d_id = district["id"]
                 d_name = district["name"]
                 
