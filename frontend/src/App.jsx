@@ -35,6 +35,7 @@ export default function App() {
   const [forecastData, setForecastData] = useState(null);
   const [climateData, setClimateData] = useState(null);
   const [selectedCrop, setSelectedCrop] = useState('soybean');
+  const [selectedCropStage, setSelectedCropStage] = useState('sowing');
   const [advisoryData, setAdvisoryData] = useState(null);
   const [supportedCrops, setSupportedCrops] = useState([]);
   const [observations, setObservations] = useState([]);
@@ -65,7 +66,7 @@ export default function App() {
     initData();
   }, []);
 
-  // Reactive update when user changes location, period, or crop
+  // Reactive update when user changes location, period, crop, or stage
   useEffect(() => {
     async function updatePredictions() {
       try {
@@ -80,7 +81,20 @@ export default function App() {
       }
     }
     updatePredictions();
-  }, [selectedDistrict, selectedBlock, selectedPanchayat, forecastDays, selectedCrop]);
+  }, [selectedDistrict, selectedBlock, selectedPanchayat, forecastDays, selectedCrop, selectedCropStage]);
+
+  const handleGenerateIntelligence = async () => {
+    try {
+      const [fc, adv] = await Promise.all([
+        fetchForecast(selectedDistrict, selectedBlock, selectedPanchayat, forecastDays),
+        fetchAdvisory(selectedCrop, selectedDistrict, selectedBlock, selectedPanchayat, forecastDays)
+      ]);
+      if (fc) setForecastData(fc);
+      if (adv) setAdvisoryData(adv);
+    } catch (err) {
+      console.error('Generate intelligence error:', err);
+    }
+  };
 
   const handleRefreshObservations = async () => {
     try {
@@ -140,7 +154,7 @@ export default function App() {
       />
 
       {/* ── Main Content Area ── */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-5">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Dashboard: 2-column sidebar + content layout */}
         {currentView === 'dashboard' && (
           <div className="flex flex-col lg:flex-row gap-5 items-start">
@@ -158,6 +172,9 @@ export default function App() {
                 setForecastDays={setForecastDays}
                 selectedCrop={selectedCrop}
                 setSelectedCrop={setSelectedCrop}
+                selectedCropStage={selectedCropStage}
+                setSelectedCropStage={setSelectedCropStage}
+                onGenerateIntelligence={handleGenerateIntelligence}
                 supportedCrops={supportedCrops}
                 language={language}
                 t={t}
@@ -214,6 +231,17 @@ export default function App() {
             supportedCrops={supportedCrops}
             language={language}
             t={t}
+            selectedDistrict={selectedDistrict}
+            setSelectedDistrict={setSelectedDistrict}
+            selectedBlock={selectedBlock}
+            setSelectedBlock={setSelectedBlock}
+            selectedPanchayat={selectedPanchayat}
+            setSelectedPanchayat={setSelectedPanchayat}
+            forecastDays={forecastDays}
+            setForecastDays={setForecastDays}
+            selectedCropStage={selectedCropStage}
+            setSelectedCropStage={setSelectedCropStage}
+            onGenerateIntelligence={handleGenerateIntelligence}
           />
         )}
 
@@ -243,7 +271,7 @@ export default function App() {
 
       {/* ── Government Footer ── */}
       <footer className="bg-agri-secondary text-slate-300 text-xs border-t-4 border-agri-primary mt-10">
-        <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <div className="font-extrabold text-amber-400 text-sm mb-2">
               SIH PS 26086 — National Agromet DSS

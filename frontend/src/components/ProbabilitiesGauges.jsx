@@ -152,6 +152,35 @@ export function ProbabilitiesGauges({ forecastData, forecastDays, selectedLocati
         />
       </div>
 
+      {/* Precipitation Anomaly & Active/Break Duration Outlook Strip */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+        <div className="bg-slate-50 border border-slate-200 rounded p-2.5 flex items-center justify-between">
+          <div>
+            <span className="text-[10px] uppercase font-bold text-slate-500 block">Localized Precipitation Anomaly</span>
+            <span className="font-extrabold text-slate-800">
+              {forecastData?.climatology_anomaly?.anomaly_status || "Above Normal (+17.6%)"}
+            </span>
+          </div>
+          <div className="text-right font-mono text-[11px] text-slate-600">
+            <div>Pred: <strong className="text-agri-secondary">{forecastData?.climatology_anomaly?.predicted_rainfall_mm || "123.5"} mm</strong></div>
+            <div>Norm: <span>{forecastData?.climatology_anomaly?.normal_rainfall_mm || "105.0"} mm</span></div>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 border border-slate-200 rounded p-2.5 flex items-center justify-between">
+          <div>
+            <span className="text-[10px] uppercase font-bold text-slate-500 block">Active / Break Spell Duration</span>
+            <span className="font-extrabold text-slate-800">
+              Active: {forecastData?.duration_outlook?.active_monsoon_duration || "6–9 Days"}
+            </span>
+          </div>
+          <div className="text-right text-[11px] text-slate-600">
+            <div>Break: <strong className="text-amber-700">{forecastData?.duration_outlook?.break_dry_spell_duration || "1–3 Days"}</strong></div>
+            <div className="text-[10px] text-slate-500">Onset Window: {forecastData?.duration_outlook?.expected_onset_window || "12–16 June"}</div>
+          </div>
+        </div>
+      </div>
+
       {/* Official Agromet Synthesis Briefing */}
       <div className="bg-slate-50 border-l-4 border-agri-secondary p-3 text-xs text-slate-800 rounded-r">
         <div className="flex items-start gap-2">

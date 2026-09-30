@@ -3,55 +3,55 @@
     "model_type": "XGBoost Classifier (Isotonic Calibrated)",
     "roc_auc": 0.999,
     "brier_score": 0.0064,
-    "f1_score": 0.9553,
+    "f1_score": 0.9548,
     "top_features": [
       [
         "doy_sin",
-        0.46
-      ],
-      [
-        "relative_humidity_700hpa",
-        0.1438
-      ],
-      [
-        "zonal_wind_850hpa_ms",
-        0.13
+        0.3667
       ],
       [
         "antecedent_soil_moisture_pct",
-        0.1217
+        0.1774
       ],
       [
-        "doy_cos",
-        0.0293
+        "relative_humidity_700hpa",
+        0.1584
+      ],
+      [
+        "zonal_wind_850hpa_ms",
+        0.1089
+      ],
+      [
+        "temp_max_c",
+        0.0567
       ]
     ]
   },
   "break_risk": {
     "model_type": "Random Forest Classifier (Balanced Class Weights)",
     "roc_auc": 0.9999,
-    "brier_score": 0.0085,
-    "f1_score": 0.9903,
+    "brier_score": 0.0104,
+    "f1_score": 0.9904,
     "top_features": [
       [
         "enso_nino34",
-        0.4523
+        0.4422
       ],
       [
         "doy_sin",
-        0.1183
+        0.1233
       ],
       [
         "zonal_wind_850hpa_ms",
-        0.1149
+        0.1017
       ],
       [
         "antecedent_soil_moisture_pct",
-        0.08
+        0.0879
       ],
       [
         "iod_dmi",
-        0.0732
+        0.0704
       ]
     ]
   },

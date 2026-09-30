@@ -65,11 +65,14 @@ class CropAdvisoryEngine:
         onset_prob: int,
         break_prob: int,
         heavy_prob: int,
-        confidence_level: int = 85
+        confidence_level: int = 85,
+        crop_stage: str = "sowing"
     ) -> Dict[str, Any]:
         crop_key = (crop_id or "soybean").lower()
         if crop_key not in CROP_PROFILES:
             crop_key = "soybean"
+
+        stage_key = (crop_stage or "sowing").lower()
 
         profile = CROP_PROFILES[crop_key]
         crop_name = profile["name"]
@@ -149,11 +152,20 @@ class CropAdvisoryEngine:
             reasons_mr.append("हवामानाचा अंदाज मध्यम असून पावसाचे संतुलन राखले जाण्याची शक्यता आहे.")
             reasons_hi.append("मौसम का पूर्वानुमान सामान्य है, जोखिम संतुलित स्तर पर है।")
 
-            field_measures.append("Conduct germination tests on farm-saved seeds before field placement.")
+        stage_guidance = {
+            "sowing": "Pre-sowing stage: Ensure seed treatment with Rhizobium & Trichoderma before field placement.",
+            "germination": "Germination / Emergence stage: Monitor seedling emergence and protect young sprouts from standing water.",
+            "vegetative": "Vegetative growth stage: Maintain weed-free plots and apply top-dressing nitrogen only when soil moisture is adequate.",
+            "flowering": "Flowering / Pod formation stage: Critical moisture sensitivity window. Deploy protective micro-irrigation if dry spell exceeds 5 days.",
+            "maturity": "Maturity / Harvest stage: Plan harvesting during dry clear windows and drain excess field water 10 days before harvest."
+        }
+        if stage_key in stage_guidance:
+            field_measures.insert(0, stage_guidance[stage_key])
 
         return {
             "crop": crop_name,
             "crop_id": crop_key,
+            "crop_stage": stage_key.title(),
             "crop_details": profile,
             "location": f"{panchayat.title()}, {block.title()}, {district.title()}",
             "forecast_period": f"{days} Days",

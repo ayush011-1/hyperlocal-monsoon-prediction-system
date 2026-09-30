@@ -124,9 +124,9 @@ export function ForecastChart({ dailyForecast, forecastDays, t }) {
       </div>
 
       {/* Chart Footer Note */}
-      <div className="bg-slate-50 border-t border-slate-200 px-3 py-2 flex items-center justify-between text-[11px] text-slate-500">
+      <div className="bg-slate-50 border-t border-slate-200 px-3 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-[11px] text-slate-500">
         <span>* Bars = daily forecasted rainfall (mm) | Lines = probability curves. Soil moisture &gt;45% = sowing-ready threshold.</span>
-        <span className="font-mono text-slate-400">Model Grid: 5km × 5km</span>
+        <span className="font-mono text-slate-400 shrink-0">Model Grid: 5km × 5km</span>
       </div>
     </div>
   );

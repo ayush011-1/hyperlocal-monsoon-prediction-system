@@ -77,14 +77,17 @@ cd hyperlocal-monsoon-prediction-system
 ### 2. Backend Setup
 ```bash
 cd backend
-python3 -m pip install -r requirements.txt
+# Windows:
+python -m pip install -r requirements.txt
+# Linux/macOS:
+# python3 -m pip install -r requirements.txt
 
 # (Optional) Retrain models from 30-year climatology:
-# python3 ml/dataset_generator.py
-# python3 ml/train_models.py
+# python ml/dataset_generator.py
+# python ml/train_models.py
 
 # Launch FastAPI backend:
-python3 -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 API documentation is accessible at `http://127.0.0.1:8000/docs`.
 

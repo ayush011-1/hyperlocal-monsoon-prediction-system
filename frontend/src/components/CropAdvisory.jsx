@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle2, AlertTriangle, HelpCircle, CheckSquare, ShieldCheck } from 'lucide-react';
+import { sendNotification } from '../services/api';
 
 const URGENCY_STYLE = {
   'Optimal':       'bg-emerald-700 text-white border-emerald-800',
@@ -156,11 +157,84 @@ export function CropAdvisory({ advisoryData, selectedCrop, setSelectedCrop, supp
           </div>
         </div>
 
-        {/* Disclaimer */}
-        <p className="text-[10px] text-slate-400 italic border-t border-slate-100 pt-2">
-          {advisoryData?.disclaimer}
-        </p>
+        {/* Disclaimer & Notification Dispatch Trigger */}
+        <div className="border-t border-slate-200 pt-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <p className="text-[10px] text-slate-400 italic flex-1">
+            {advisoryData?.disclaimer}
+          </p>
+
+          <div className="w-full md:w-auto">
+            <NotificationDispatchBar
+              advisoryText={recommendation}
+              crop={advisoryData?.crop || 'Soybean'}
+              language={language}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
+function NotificationDispatchBar({ advisoryText, crop, language }) {
+  const [channel, setChannel] = React.useState('sms');
+  const [recipient, setRecipient] = React.useState('9876543210');
+  const [sending, setSending] = React.useState(false);
+  const [result, setResult] = React.useState(null);
+
+  const handleDispatch = async () => {
+    if (!recipient) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await sendNotification({
+        channel,
+        recipient,
+        crop,
+        advisory_text: advisoryText,
+        language
+      });
+      setResult(res);
+    } catch (e) {
+      setResult({ status: 'error', detail: e.message });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="bg-slate-50 border border-slate-200 rounded p-2 text-xs flex flex-col sm:flex-row items-center gap-2">
+      <span className="font-bold text-slate-700 whitespace-nowrap">📢 Dispatch Alert:</span>
+      <select
+        value={channel}
+        onChange={(e) => setChannel(e.target.value)}
+        className="bg-white border border-slate-300 rounded px-1.5 py-1 text-xs font-semibold text-slate-800"
+      >
+        <option value="sms">📱 SMS Alert</option>
+        <option value="whatsapp">💬 WhatsApp</option>
+        <option value="api_webhook">🌐 Webhook API</option>
+      </select>
+      <input
+        type="text"
+        value={recipient}
+        onChange={(e) => setRecipient(e.target.value)}
+        placeholder={channel === 'api_webhook' ? 'https://api.agri.gov.in' : 'Mobile No (e.g. 9876543210)'}
+        className="bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 w-36 sm:w-44"
+      />
+      <button
+        onClick={handleDispatch}
+        disabled={sending}
+        className="bg-agri-primary hover:bg-emerald-800 text-white font-bold px-3 py-1 rounded text-xs transition shrink-0"
+      >
+        {sending ? 'Sending...' : 'Send Alert'}
+      </button>
+
+      {result && result.status === 'success' && (
+        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-300">
+          ✓ Dispatched ({result.dispatch_id})
+        </span>
+      )}
+    </div>
+  );
+}
+

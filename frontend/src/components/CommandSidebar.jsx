@@ -13,6 +13,9 @@ export function CommandSidebar({
   setForecastDays,
   selectedCrop,
   setSelectedCrop,
+  selectedCropStage,
+  setSelectedCropStage,
+  onGenerateIntelligence,
   supportedCrops,
   language,
   t
@@ -215,6 +218,34 @@ export function CommandSidebar({
             );
           })}
         </div>
+      </div>
+
+      {/* 4. Crop Growth Stage */}
+      <div className="border-t border-slate-200 pt-3">
+        <label className="block text-xs font-bold text-slate-700 mb-1">
+          Crop Stage (पिकाची अवस्था)
+        </label>
+        <select
+          value={selectedCropStage || 'sowing'}
+          onChange={(e) => setSelectedCropStage && setSelectedCropStage(e.target.value)}
+          className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 font-medium text-slate-900 text-xs focus:ring-1 focus:ring-agri-primary"
+        >
+          <option value="sowing">Pre-sowing / Sowing (पेरणी)</option>
+          <option value="germination">Germination / Emergence (अंकुरण)</option>
+          <option value="vegetative">Vegetative Growth (वाढ अवस्था)</option>
+          <option value="flowering">Flowering / Pod Formation (फुलधारणा)</option>
+          <option value="maturity">Maturity / Harvesting (पक्वता / काढणी)</option>
+        </select>
+      </div>
+
+      {/* Generate Intelligence Action Button */}
+      <div className="border-t border-slate-200 pt-3">
+        <button
+          onClick={() => onGenerateIntelligence && onGenerateIntelligence()}
+          className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2 px-3 rounded shadow transition flex items-center justify-center gap-1.5 border border-amber-300"
+        >
+          <span>⚡ Generate Intelligence</span>
+        </button>
       </div>
     </div>
   );
