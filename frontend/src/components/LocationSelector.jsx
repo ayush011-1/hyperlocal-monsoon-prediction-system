@@ -3,6 +3,8 @@ import { MapPin, Calendar, Check } from 'lucide-react';
 
 export function LocationSelector({
   locationsData,
+  selectedState,
+  setSelectedState,
   selectedDistrict,
   setSelectedDistrict,
   selectedBlock,
@@ -13,7 +15,15 @@ export function LocationSelector({
   setForecastDays,
   t
 }) {
-  const districts = locationsData?.districts || [];
+  const states = locationsData?.states || [
+    { id: 'maharashtra', name: locationsData?.state || 'Maharashtra', districts: locationsData?.districts || [] }
+  ];
+
+  const currentStateObj = states.find(
+    (s) => s.id.toLowerCase() === (selectedState || 'maharashtra').toLowerCase()
+  ) || states[0];
+
+  const districts = currentStateObj?.districts || [];
   const currentDistrictObj = districts.find(
     (d) => d.id === selectedDistrict || d.name.toLowerCase() === selectedDistrict.toLowerCase()
   ) || districts[0];
@@ -24,6 +34,22 @@ export function LocationSelector({
   ) || blocks[0];
 
   const panchayats = currentBlockObj?.panchayats || [];
+
+  const handleStateChange = (stId) => {
+    if (setSelectedState) setSelectedState(stId);
+    const sObj = states.find((s) => s.id === stId);
+    if (sObj && sObj.districts && sObj.districts.length > 0) {
+      const newDistId = sObj.districts[0].id;
+      setSelectedDistrict(newDistId);
+      if (sObj.districts[0].blocks && sObj.districts[0].blocks.length > 0) {
+        const newBlockId = sObj.districts[0].blocks[0].id;
+        setSelectedBlock(newBlockId);
+        if (sObj.districts[0].blocks[0].panchayats && sObj.districts[0].blocks[0].panchayats.length > 0) {
+          setSelectedPanchayat(sObj.districts[0].blocks[0].panchayats[0].id);
+        }
+      }
+    }
+  };
 
   const handleDistrictChange = (distId) => {
     setSelectedDistrict(distId);
@@ -49,15 +75,22 @@ export function LocationSelector({
   return (
     <div className="bg-white border border-gov-border rounded-md shadow-xs p-4 mb-4">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-        {/* State Badge */}
+        {/* State Select */}
         <div className="lg:col-span-2">
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
             {t.state}
           </label>
-          <div className="px-3 py-2 bg-slate-100 border border-slate-300 rounded text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-            Maharashtra
-          </div>
+          <select
+            value={currentStateObj?.id || selectedState || 'maharashtra'}
+            onChange={(e) => handleStateChange(e.target.value)}
+            className="w-full bg-emerald-50 border border-emerald-300 rounded px-2.5 py-1.5 text-sm font-bold text-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+          >
+            {states.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* District Select */}

@@ -33,6 +33,8 @@ export function FarmerView({
   supportedCrops,
   language,
   t,
+  selectedState,
+  setSelectedState,
   selectedDistrict,
   setSelectedDistrict,
   selectedBlock,
@@ -43,7 +45,8 @@ export function FarmerView({
   setForecastDays,
   selectedCropStage,
   setSelectedCropStage,
-  onGenerateIntelligence
+  onGenerateIntelligence,
+  locationsData
 }) {
   const [hasCheckedFarm, setHasCheckedFarm] = useState(true);
   const [isEditingSetup, setIsEditingSetup] = useState(false);
@@ -91,20 +94,81 @@ export function FarmerView({
     { id: 'maturity', label_en: 'Maturity / Harvest', label_mr: 'पक्वता / काढणी', label_hi: 'पकाव / कटाई' }
   ];
 
-  // District options hardcoded matching locations schema for instant picker
-  const districtOptions = [
-    { id: 'pune', name: 'Pune', mr: 'पुणे', blocks: ['haveli', 'baramati', 'junnar', 'indapur'] },
-    { id: 'nashik', name: 'Nashik', mr: 'नाशिक', blocks: ['dindori', 'niphad', 'malegaon', 'chandwad'] },
-    { id: 'ahilyanagar', name: 'Ahilyanagar (Ahmednagar)', mr: 'अहिल्यानगर', blocks: ['sangamner', 'rahata', 'kopergaon', 'parner'] },
-    { id: 'satara', name: 'Satara', mr: 'सातारा', blocks: ['karad', 'wai', 'phaltan', 'koregaon'] },
-    { id: 'kolhapur', name: 'Kolhapur', mr: 'कोल्हापूर', blocks: ['karveer', 'shirol', 'hatkanangale', 'kagal'] },
-    { id: 'solapur', name: 'Solapur', mr: 'सोलापूर', blocks: ['pandharpur', 'barshi', 'mohol', 'karmala'] }
-  ];
+  // Dynamic Multi-State & Location Data Parsing
+  const statesList = useMemo(() => {
+    if (locationsData?.states) return locationsData.states;
+    if (locationsData?.districts) {
+      return [{
+        id: 'maharashtra',
+        name: locationsData.state || 'Maharashtra',
+        state_code: locationsData.state_code || 'MH',
+        districts: locationsData.districts
+      }];
+    }
+    return [];
+  }, [locationsData]);
+
+  const currentStateObj = statesList.find(
+    s => s.id.toLowerCase() === (selectedState || 'maharashtra').toLowerCase()
+  ) || statesList[0];
+
+  const districtsList = currentStateObj?.districts || [];
+
+  const currentDistrictObj = districtsList.find(
+    d => d.id.toLowerCase() === (selectedDistrict || '').toLowerCase() || d.name.toLowerCase() === (selectedDistrict || '').toLowerCase()
+  ) || districtsList[0];
+
+  const blocksList = currentDistrictObj?.blocks || [];
+
+  const currentBlockObj = blocksList.find(
+    b => b.id.toLowerCase() === (selectedBlock || '').toLowerCase() || b.name.toLowerCase() === (selectedBlock || '').toLowerCase()
+  ) || blocksList[0];
+
+  const panchayatsList = currentBlockObj?.panchayats || [];
+
+  const currentPanchayatObj = panchayatsList.find(
+    p => p.id.toLowerCase() === (selectedPanchayat || '').toLowerCase() || p.name.toLowerCase() === (selectedPanchayat || '').toLowerCase()
+  ) || panchayatsList[0];
 
   const getDistrictName = (id) => {
-    const d = districtOptions.find(opt => opt.id === (id || 'pune').toLowerCase());
+    const d = districtsList.find(opt => opt.id.toLowerCase() === (id || 'pune').toLowerCase() || opt.name.toLowerCase() === (id || 'pune').toLowerCase());
     if (!d) return (id || 'Pune').toUpperCase();
-    return language === 'mr' ? d.mr : d.name;
+    return d.name;
+  };
+
+  const handleFarmerStateChange = (stId) => {
+    if (setSelectedState) setSelectedState(stId);
+    const sObj = statesList.find(s => s.id === stId);
+    if (sObj && sObj.districts && sObj.districts.length > 0) {
+      const newDistId = sObj.districts[0].id;
+      setSelectedDistrict(newDistId);
+      if (sObj.districts[0].blocks && sObj.districts[0].blocks.length > 0) {
+        const newBlockId = sObj.districts[0].blocks[0].id;
+        setSelectedBlock(newBlockId);
+        if (sObj.districts[0].blocks[0].panchayats && sObj.districts[0].blocks[0].panchayats.length > 0) {
+          setSelectedPanchayat(sObj.districts[0].blocks[0].panchayats[0].id);
+        }
+      }
+    }
+  };
+
+  const handleFarmerDistrictChange = (distId) => {
+    setSelectedDistrict(distId);
+    const dObj = districtsList.find(d => d.id === distId);
+    if (dObj && dObj.blocks && dObj.blocks.length > 0) {
+      setSelectedBlock(dObj.blocks[0].id);
+      if (dObj.blocks[0].panchayats && dObj.blocks[0].panchayats.length > 0) {
+        setSelectedPanchayat(dObj.blocks[0].panchayats[0].id);
+      }
+    }
+  };
+
+  const handleFarmerBlockChange = (blkId) => {
+    setSelectedBlock(blkId);
+    const bObj = blocksList.find(b => b.id === blkId);
+    if (bObj && bObj.panchayats && bObj.panchayats.length > 0) {
+      setSelectedPanchayat(bObj.panchayats[0].id);
+    }
   };
 
   let localizedRecommendation = advisoryData?.recommendation || '';
@@ -307,43 +371,72 @@ export function FarmerView({
               <div className="flex items-center gap-2 font-black text-slate-800 text-xs sm:text-sm">
                 <span className="w-5 h-5 rounded-full bg-emerald-700 text-white text-xs font-black flex items-center justify-center shrink-0">1</span>
                 <MapPin className="w-4 h-4 text-emerald-700 shrink-0" />
-                <span>{language === 'mr' ? 'स्थान (जिल्हा / तालुका)' : language === 'hi' ? 'स्थान (जिला / ब्लॉक)' : 'Location'}</span>
+                <span>{language === 'mr' ? 'स्थान (राज्य / जिल्हा)' : language === 'hi' ? 'स्थान (राज्य / जिला)' : 'Location'}</span>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-600 block mb-1">
-                  {language === 'mr' ? 'जिल्हा:' : 'District:'}
+                <label htmlFor="farmer-state" className="text-[11px] font-bold text-slate-600 block mb-1">
+                  {language === 'mr' ? 'राज्य:' : language === 'hi' ? 'राज्य:' : 'State:'}
                 </label>
                 <select
-                  value={selectedDistrict}
-                  onChange={(e) => {
-                    const d = e.target.value;
-                    setSelectedDistrict(d);
-                    const match = districtOptions.find(opt => opt.id === d);
-                    if (match && match.blocks.length > 0) {
-                      setSelectedBlock(match.blocks[0]);
-                    }
-                  }}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500"
+                  id="farmer-state"
+                  value={currentStateObj?.id || selectedState || 'maharashtra'}
+                  onChange={(e) => handleFarmerStateChange(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500 cursor-pointer mb-2"
                 >
-                  {districtOptions.map(d => (
-                    <option key={d.id} value={d.id}>
-                      {language === 'mr' ? d.mr : d.name}
+                  {statesList.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.state_code || 'IN'})
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-600 block mb-1">
-                  {language === 'mr' ? 'तालुका / गाव:' : 'Block / Village:'}
+                <label htmlFor="farmer-district" className="text-[11px] font-bold text-slate-600 block mb-1">
+                  {language === 'mr' ? 'जिल्हा / शहर:' : 'District / City:'}
                 </label>
                 <select
-                  value={selectedBlock}
-                  onChange={(e) => setSelectedBlock(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500 capitalize"
+                  id="farmer-district"
+                  value={currentDistrictObj?.id || selectedDistrict}
+                  onChange={(e) => handleFarmerDistrictChange(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
-                  {(districtOptions.find(d => d.id === selectedDistrict)?.blocks || ['haveli', 'baramati']).map(b => (
-                    <option key={b} value={b}>{b}</option>
+                  {districtsList.map(d => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="farmer-block" className="text-[11px] font-bold text-slate-600 block mb-1">
+                  {language === 'mr' ? 'तालुका / गट:' : 'Block / Taluka:'}
+                </label>
+                <select
+                  id="farmer-block"
+                  value={currentBlockObj?.id || selectedBlock}
+                  onChange={(e) => handleFarmerBlockChange(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                >
+                  {blocksList.map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="farmer-panchayat" className="text-[11px] font-bold text-slate-600 block mb-1">
+                  {language === 'mr' ? 'गाव / परिसर:' : 'Village / Area:'}
+                </label>
+                <select
+                  id="farmer-panchayat"
+                  value={currentPanchayatObj?.id || selectedPanchayat}
+                  onChange={(e) => setSelectedPanchayat(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                >
+                  {panchayatsList.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.elevation_m}m AMSL)</option>
                   ))}
                 </select>
               </div>

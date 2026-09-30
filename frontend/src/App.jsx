@@ -21,12 +21,14 @@ import {
 } from './services/api';
 
 import { translations } from './data/translations';
+import fallbackLocations from './data/locations.json';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [language, setLanguage] = useState('en');
 
-  const [locationsData, setLocationsData] = useState(null);
+  const [locationsData, setLocationsData] = useState(fallbackLocations);
+  const [selectedState, setSelectedState] = useState('maharashtra');
   const [selectedDistrict, setSelectedDistrict] = useState('pune');
   const [selectedBlock, setSelectedBlock] = useState('haveli');
   const [selectedPanchayat, setSelectedPanchayat] = useState('wagholi');
@@ -106,6 +108,7 @@ export default function App() {
   };
 
   const handleLoadPuneBenchmark = () => {
+    setSelectedState('maharashtra');
     setSelectedDistrict('pune');
     setSelectedBlock('haveli');
     setSelectedPanchayat('wagholi');
@@ -120,22 +123,35 @@ export default function App() {
     selectedCrop === 'soybean';
 
   // Build a readable location string for display
-  const districtLabel = locationsData?.districts?.find(
-    d => d.id === selectedDistrict
-  )?.name || selectedDistrict.toUpperCase();
+  const statesList = locationsData?.states || [
+    { id: 'maharashtra', name: locationsData?.state || 'Maharashtra', districts: locationsData?.districts || [] }
+  ];
 
-  const blockLabel = locationsData?.districts
-    ?.find(d => d.id === selectedDistrict)
-    ?.blocks?.find(b => b.id === selectedBlock)
-    ?.name || selectedBlock.toUpperCase();
+  const currentStateObj = statesList.find(
+    s => s.id.toLowerCase() === (selectedState || 'maharashtra').toLowerCase()
+  ) || statesList[0];
 
-  const panchayatLabel = locationsData?.districts
-    ?.find(d => d.id === selectedDistrict)
-    ?.blocks?.find(b => b.id === selectedBlock)
-    ?.panchayats?.find(p => p.id === selectedPanchayat)
-    ?.name || selectedPanchayat.toUpperCase();
+  const stateLabel = currentStateObj?.name || 'Maharashtra';
 
-  const selectedLocationName = `${panchayatLabel}, ${blockLabel} — ${districtLabel}`;
+  const currentDistrictObj = currentStateObj?.districts?.find(
+    d => d.id.toLowerCase() === (selectedDistrict || '').toLowerCase() || d.name.toLowerCase() === (selectedDistrict || '').toLowerCase()
+  ) || currentStateObj?.districts?.[0];
+
+  const districtLabel = currentDistrictObj?.name || selectedDistrict.toUpperCase();
+
+  const currentBlockObj = currentDistrictObj?.blocks?.find(
+    b => b.id.toLowerCase() === (selectedBlock || '').toLowerCase() || b.name.toLowerCase() === (selectedBlock || '').toLowerCase()
+  ) || currentDistrictObj?.blocks?.[0];
+
+  const blockLabel = currentBlockObj?.name || selectedBlock.toUpperCase();
+
+  const currentPanchayatObj = currentBlockObj?.panchayats?.find(
+    p => p.id.toLowerCase() === (selectedPanchayat || '').toLowerCase() || p.name.toLowerCase() === (selectedPanchayat || '').toLowerCase()
+  ) || currentBlockObj?.panchayats?.[0];
+
+  const panchayatLabel = currentPanchayatObj?.name || selectedPanchayat.toUpperCase();
+
+  const selectedLocationName = `${panchayatLabel}, ${blockLabel} — ${districtLabel} (${stateLabel})`;
 
   // Sidebar is only shown on the main dashboard tab
   const showSidebar = currentView === 'dashboard';
@@ -162,6 +178,8 @@ export default function App() {
             <aside className="w-full lg:w-64 xl:w-72 shrink-0">
               <CommandSidebar
                 locationsData={locationsData}
+                selectedState={selectedState}
+                setSelectedState={setSelectedState}
                 selectedDistrict={selectedDistrict}
                 setSelectedDistrict={setSelectedDistrict}
                 selectedBlock={selectedBlock}
@@ -231,6 +249,8 @@ export default function App() {
             supportedCrops={supportedCrops}
             language={language}
             t={t}
+            selectedState={selectedState}
+            setSelectedState={setSelectedState}
             selectedDistrict={selectedDistrict}
             setSelectedDistrict={setSelectedDistrict}
             selectedBlock={selectedBlock}
@@ -242,6 +262,7 @@ export default function App() {
             selectedCropStage={selectedCropStage}
             setSelectedCropStage={setSelectedCropStage}
             onGenerateIntelligence={handleGenerateIntelligence}
+            locationsData={locationsData}
           />
         )}
 

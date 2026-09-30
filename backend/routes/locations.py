@@ -19,15 +19,36 @@ def get_all_locations():
     """
     return load_locations()
 
-@router.get("/districts")
-def get_districts():
+@router.get("/states")
+def get_states():
     data = load_locations()
-    return [{"id": d["id"], "name": d["name"], "center": d["center"]} for d in data.get("districts", [])]
+    if "states" in data:
+        return [{"id": s["id"], "name": s["name"], "state_code": s.get("state_code", "")} for s in data["states"]]
+    return [{"id": "maharashtra", "name": data.get("state", "Maharashtra"), "state_code": data.get("state_code", "MH")}]
+
+@router.get("/districts")
+def get_districts(state_id: str = None):
+    data = load_locations()
+    districts_list = []
+    if "states" in data:
+        for s in data["states"]:
+            if not state_id or s["id"].lower() == state_id.lower() or s["name"].lower() == state_id.lower():
+                districts_list.extend(s.get("districts", []))
+    else:
+        districts_list = data.get("districts", [])
+    return [{"id": d["id"], "name": d["name"], "center": d["center"]} for d in districts_list]
 
 @router.get("/blocks/{district_id}")
 def get_blocks_for_district(district_id: str):
     data = load_locations()
-    for d in data.get("districts", []):
+    districts_list = []
+    if "states" in data:
+        for s in data["states"]:
+            districts_list.extend(s.get("districts", []))
+    else:
+        districts_list = data.get("districts", [])
+
+    for d in districts_list:
         if d["id"].lower() == district_id.lower() or d["name"].lower() == district_id.lower():
             return d.get("blocks", [])
     raise HTTPException(status_code=404, detail="District not found")

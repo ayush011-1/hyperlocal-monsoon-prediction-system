@@ -21,21 +21,40 @@ class MLPredictorService:
         # Load locations coordinates mapping
         self.locations_map = {}
         try:
-            with open(locations_file, "r") as f:
+            with open(locations_file, "r", encoding="utf-8") as f:
                 loc_data = json.load(f)
-            for d in loc_data.get("districts", []):
+
+            states = loc_data.get("states", [])
+            districts_list = []
+            if states:
+                for s in states:
+                    districts_list.extend(s.get("districts", []))
+            else:
+                districts_list = loc_data.get("districts", [])
+
+            for d in districts_list:
                 d_name = d["name"].lower()
-                self.locations_map[d_name] = {"lat": d["center"][0], "lng": d["center"][1], "elevation": 550}
+                d_id = d["id"].lower()
+                d_meta = {"lat": d["center"][0], "lng": d["center"][1], "elevation": 550, "terrain_type": "Deccan Plateau"}
+                self.locations_map[d_name] = d_meta
+                self.locations_map[d_id] = d_meta
                 for b in d.get("blocks", []):
                     b_name = b["name"].lower()
-                    self.locations_map[b_name] = {"lat": b["center"][0], "lng": b["center"][1], "elevation": 560}
+                    b_id = b["id"].lower()
+                    b_meta = {"lat": b["center"][0], "lng": b["center"][1], "elevation": 560, "terrain_type": "Deccan Plateau"}
+                    self.locations_map[b_name] = b_meta
+                    self.locations_map[b_id] = b_meta
                     for p in b.get("panchayats", []):
                         p_name = p["name"].lower()
-                        self.locations_map[p_name] = {
+                        p_id = p["id"].lower()
+                        p_meta = {
                             "lat": p["lat"],
                             "lng": p["lng"],
-                            "elevation": p.get("elevation_m", 560)
+                            "elevation": p.get("elevation_m", 560),
+                            "terrain_type": p.get("terrain_type", "Deccan Plateau Slope")
                         }
+                        self.locations_map[p_name] = p_meta
+                        self.locations_map[p_id] = p_meta
         except Exception as e:
             print(f"Warning loading locations: {e}")
 
@@ -100,13 +119,14 @@ class MLPredictorService:
         elif d_key in self.locations_map:
             geo = self.locations_map[d_key]
         else:
-            geo = {"lat": 18.5204, "lng": 73.8567, "elevation": 560}
+            geo = {"lat": 18.5204, "lng": 73.8567, "elevation": 560, "terrain_type": "Deccan Plateau Slope"}
 
         lat = geo["lat"]
         lng = geo["lng"]
         elevation = geo["elevation"]
+        terrain_type = geo.get("terrain_type", "Deccan Plateau Slope")
         ghats_dist_km = max(5.0, (lng - 73.3) * 111.0)
-        return lat, lng, elevation, ghats_dist_km
+        return lat, lng, elevation, ghats_dist_km, terrain_type
 
     def predict_probabilities(self, district: str, block: str, panchayat: str, days: int) -> Dict[str, Any]:
         """
@@ -117,7 +137,7 @@ class MLPredictorService:
 
         if self.models_loaded:
             # Geographic downscaling metadata
-            lat, lng, elevation, ghats_dist_km = self._get_geo_params(district, block, panchayat)
+            lat, lng, elevation, ghats_dist_km, terrain_type = self._get_geo_params(district, block, panchayat)
             
             # Determine target Day-Of-Year (DOY) — evaluate seasonal monsoon onset window (June DOY 165)
             now = datetime.now()
@@ -266,6 +286,8 @@ class MLPredictorService:
             "district": district,
             "block": block,
             "panchayat": panchayat,
+            "elevation_m": elevation,
+            "terrain_type": terrain_type,
             "forecast_period_days": days,
             "probabilities": {
                 "monsoon_onset": onset_prob,
@@ -310,31 +332,7 @@ class MLPredictorService:
         return series
 
     def _generate_gis_features(self, district: str, block: str, panchayat: str, onset_prob: int, break_prob: int, heavy_prob: int) -> Dict[str, Any]:
-        coords_map = {
-            "pune": (18.5204, 73.8567),
-            "haveli": (18.4900, 73.9100),
-            "wagholi": (18.5800, 73.9800),
-            "baramati": (18.1517, 74.5772),
-            "junnar": (19.2067, 73.8767),
-            "nashik": (19.9975, 73.7898),
-            "dindori": (20.2014, 73.8347),
-            "niphad": (20.0767, 74.1100),
-            "ahilyanagar": (19.0952, 74.7496),
-            "sangamner": (19.5772, 74.2144),
-            "satara": (17.6805, 73.9934),
-            "karad": (17.2889, 74.1813),
-            "kolhapur": (16.7050, 74.2433),
-            "karveer": (16.6900, 74.2300),
-            "solapur": (17.6599, 75.9064),
-            "pandharpur": (17.6775, 75.3267)
-        }
-
-        key = (panchayat or block or district or "pune").lower()
-        center_lat, center_lng = (18.5204, 73.8567)
-        for k, v in coords_map.items():
-            if k in key:
-                center_lat, center_lng = v
-                break
+        center_lat, center_lng, elevation, ghats_dist_km, terrain_type = self._get_geo_params(district, block, panchayat)
 
         zones = [
             {
